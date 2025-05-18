@@ -34,3 +34,7 @@
 # Visual Studio Specific
 .vs/
 out/
+
+# CLion Specific
+.idea/
+cmake-build-debug/
