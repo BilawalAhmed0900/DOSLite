@@ -20,6 +20,7 @@ void mylog(const std::string& format, Args... args) {
 
     std::snprintf(buffer, bufferNeeded, format.c_str(), args...);
     std::cout << buffer << std::endl;
+    delete[] buffer;
 }
 
 #endif //LOGGER_H
