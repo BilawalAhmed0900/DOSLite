@@ -9,11 +9,11 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("DOSLite")
+project ("x8086")
 
 # Add source to this project's executable.
-add_executable (DOSLite
-        src/DOSLite.cpp
+add_executable (x8086
+        src/x8086.cpp
         src/CPU8068.cpp
         src/CPU8068.h
         src/MZExe.cpp
@@ -21,7 +21,7 @@ add_executable (DOSLite
         src/logger.h)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET DOSLite PROPERTY CXX_STANDARD 20)
+  set_property(TARGET x8086 PROPERTY CXX_STANDARD 20)
 endif()
 
 # TODO: Add tests and install targets if needed.
