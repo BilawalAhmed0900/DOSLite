@@ -47,7 +47,7 @@ private:
     uint16_t IP;
     uint16_t FLAGS;
 
-    constexpr size_t MEMORY_SIZE = 16 * 1024 * 1024;
+    constexpr static size_t MEMORY_SIZE = 16 * 1024 * 1024;
     std::vector<uint8_t> memory;
 };
 #pragma pack(pop)

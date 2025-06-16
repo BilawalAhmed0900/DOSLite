@@ -15,7 +15,10 @@ project ("DOSLite")
 add_executable (DOSLite
         src/DOSLite.cpp
         src/CPU8068.cpp
-        src/CPU8068.h)
+        src/CPU8068.h
+        src/MZExe.cpp
+        src/MZExe.h
+        src/logger.h)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET DOSLite PROPERTY CXX_STANDARD 20)
