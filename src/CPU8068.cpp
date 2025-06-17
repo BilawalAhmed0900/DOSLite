@@ -117,6 +117,16 @@ void CPU8068::dos_interrupt() {
     switch (AH) {
         case 0x09: {
             const uint8_t *string = &mem8(DS, DX);
+
+            constexpr int32_t MAX_STRING_LENGTH = SEGMENT_SIZE;
+            int32_t len = 0;
+            while (string[len++] != '$') {
+                if (len > MAX_STRING_LENGTH) {
+                    mylog("String too long, no printing");
+                    return;
+                }
+            }
+
             while (*string != '$') {
                 if (isprint(*string) || *string == '\t' || *string == '\r' || *string == '\n' || *string == '\a') {
                     std::cout << static_cast<char>(*string++);
