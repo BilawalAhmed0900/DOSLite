@@ -18,7 +18,13 @@ add_executable (x8086
         src/CPU8068.h
         src/MZExe.cpp
         src/MZExe.h
-        src/logger.h)
+        src/logger.h
+        src/Com.cpp
+        src/Com.h
+        src/LoadToCpu.cpp
+        src/LoadToCpu.h
+        src/ProgramExitedException.cpp
+        src/ProgramExitedException.h)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET x8086 PROPERTY CXX_STANDARD 20)

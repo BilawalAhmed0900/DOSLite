@@ -18,7 +18,7 @@ public:
 private:
     static bool get_mz_header(std::ifstream& file);
 
-private:
+public:
     uint16_t NumLastPageBytes{0};
     uint16_t NumPages{0};
     uint16_t RelocationItems{0};

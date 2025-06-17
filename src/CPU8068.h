@@ -8,10 +8,23 @@
 #include <cstdint>
 #include <vector>
 
+class LoadToCPU;
+
 #pragma pack(push, 1)
 class CPU8068 {
 public:
     CPU8068();
+    void reset_registers();
+    void execute();
+
+    uint8_t& mem8(uint16_t CS, uint16_t IP);
+    uint16_t& mem16(uint16_t CS, uint16_t IP);
+
+    // For now, not implementing the interrupt table
+    void interrupt(uint8_t num);
+    void dos_interrupt();
+
+    friend class LoadToCPU;
 
 private:
     union {
@@ -47,7 +60,8 @@ private:
     uint16_t IP;
     uint16_t FLAGS;
 
-    constexpr static size_t MEMORY_SIZE = 16 * 1024 * 1024;
+    constexpr static size_t MEMORY_SIZE = 1 * 1024 * 1024;
+    constexpr static size_t SEGMENT_SIZE = 64 * 1024;
     std::vector<uint8_t> memory;
 };
 #pragma pack(pop)
