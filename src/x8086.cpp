@@ -3,6 +3,7 @@
 
 #include "COM.h"
 #include "CPU8068.h"
+#include "EnableCursorControl.h"
 #include "LoadToCpu.h"
 #include "logger.h"
 #include "MZExe.h"
@@ -36,6 +37,7 @@ int main(const int argc, const char *argv[])
 	}
 
 	try {
+		EnableCursorControl _;
 		cpu.execute();
 	}
 	catch (const ProgramExitedException& e) {

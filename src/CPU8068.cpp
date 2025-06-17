@@ -116,9 +116,17 @@ void CPU8068::interrupt(const uint8_t num) {
 void CPU8068::dos_interrupt() {
     switch (AH) {
         case 0x09: {
-            uint16_t addr = (DS * SEGMENT_SIZE) + DX;
-            while (memory[addr] != '$') {
-                std::cout << static_cast<char>(memory[addr++]);
+            const uint8_t *string = &mem8(DS, DX);
+            while (*string != '$') {
+                if (isprint(*string) || *string == '\t' || *string == '\r' || *string == '\n' || *string == '\a') {
+                    std::cout << static_cast<char>(*string++);
+                } else if (*string == '\b') {
+                    string++;
+                    // Go back one, add space ' ', go back once, emulates deleting one character
+                    std::cout << "\x1b[1D \x1b[1D";
+                } else {
+                    string++;
+                }
             }
             break;
         }

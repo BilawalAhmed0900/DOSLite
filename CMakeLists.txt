@@ -24,7 +24,9 @@ add_executable (x8086
         src/LoadToCpu.cpp
         src/LoadToCpu.h
         src/ProgramExitedException.cpp
-        src/ProgramExitedException.h)
+        src/ProgramExitedException.h
+        src/EnableCursorControl.cpp
+        src/EnableCursorControl.h)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET x8086 PROPERTY CXX_STANDARD 20)
