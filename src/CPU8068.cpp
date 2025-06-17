@@ -88,7 +88,7 @@ void CPU8068::execute() {
                 break;
             }
             default:
-                mylog("Unsupported opcode '%.02X'", (int)opcode);
+                mylog("Unsupported opcode '%.02X'", static_cast<int>(opcode));
                 return;
         }
     }
