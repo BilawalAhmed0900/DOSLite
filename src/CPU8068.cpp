@@ -4,6 +4,8 @@
 
 #include "CPU8068.h"
 
+#include <algorithm>
+
 #include "logger.h"
 #include "ProgramExitedException.h"
 
@@ -81,10 +83,32 @@ void CPU8068::execute() {
                 DI = mem16(CS, IP);
                 IP += 2;
                 break;
+            case 0x88: {
+                const uint8_t mod_rm = mem8(CS, IP++);
+                mov_rm_8(mod_rm);
+                break;
+            }
             // INT
             case 0xCD: {
                 const uint8_t num = mem8(CS, IP++);
                 interrupt(num);
+                break;
+            }
+            // ADD
+            case 0x04: {
+                const uint8_t rhs = mem8(CS, IP++);
+                const uint32_t result = AL + rhs;
+                set_flags_add(AL, rhs, result, 8);
+                AL = result & 0xFF;
+                break;
+            }
+            case 0x05: {
+                const uint16_t rhs = mem16(CS, IP);
+                IP += 2;
+
+                const uint32_t result = AX + rhs;
+                set_flags_add(AX, rhs, result, 16);
+                AX = result & 0xFFFF;
                 break;
             }
             default:
@@ -115,6 +139,10 @@ void CPU8068::interrupt(const uint8_t num) {
 
 void CPU8068::dos_interrupt() {
     switch (AH) {
+        case 0x02: {
+            std::cout << static_cast<char>(DL);
+            break;
+        }
         case 0x09: {
             const uint8_t *string = &mem8(DS, DX);
 
@@ -145,5 +173,133 @@ void CPU8068::dos_interrupt() {
         default:
             mylog("Unsupported interrupt");
             break;
+    }
+}
+
+static uint8_t count_set_bits(uint32_t num) {
+    uint8_t count = 0;
+    for (int i = 0; i < sizeof(num) * 8; i++) {
+        count += (num >> i) & 1;
+    }
+
+    return count;
+}
+
+void CPU8068::set_flags_add(const uint16_t lhs, const uint16_t rhs, const uint32_t result, const uint16_t width) {
+    // Since the maximum sum can only go maximum 1 bit ahead
+    // e.g., 0xFF + 0xFF = 0x1FE,
+    // Carry Flag
+    uint8_t CF = (result >> width) & 0x1;
+
+    // Whole result is 0 or not, after addition, in the given width
+    // e.g., 0x80 + 0x80 = 0x100, i.e. 0 is the 8 bit width
+    // Zero Flag
+    uint8_t ZF = (result & ((1u << width) - 1)) == 0;
+
+    // Left most digit in the width of the result is 1
+    // Sign Flag
+    uint8_t SF = (result & (1u << (width - 1))) != 0;
+
+    // Auxiliary flag
+    // 0x10 = 0b1'0000
+    // Check if the 4th flag has been changed,
+    // Neat trick by chatgpt :)
+    uint8_t AF = ((lhs ^ rhs ^ result) & 0x10) != 0;
+
+    uint8_t lhs_sign = (lhs    & (1u << (width - 1))) != 0;
+    uint8_t rhs_sign = (rhs    & (1u << (width - 1))) != 0;
+    uint8_t res_sign = (result & (1u << (width - 1))) != 0;
+    // Overflow Flag
+    uint8_t OF = (lhs_sign == rhs_sign) && (lhs_sign != res_sign);
+
+    // Lowest 8 bit have even number of ones
+    // Parity Flag
+    uint8_t PF = count_set_bits(result & ((1 << width) - 1)) & 1;
+
+    FLAGS &= ~(1 << 0);  // Clear out Carry Flag
+    FLAGS &= ~(1 << 2);  // Clear out Parity Flag
+    FLAGS &= ~(1 << 4);  // Clear out Auxiliary Flag
+    FLAGS &= ~(1 << 6);  // Clear out Zero Flag
+    FLAGS &= ~(1 << 7);  // Clear out Sign Flag
+    FLAGS &= ~(1 << 11); // Clear out Overflow Flag
+    FLAGS |= ((CF & 0x1) << 0);
+    FLAGS |= ((PF & 0x1) << 2);
+    FLAGS |= ((AF & 0x1) << 4);
+    FLAGS |= ((ZF & 0x1) << 6);
+    FLAGS |= ((SF & 0x1) << 7);
+    FLAGS |= ((OF & 0x1) << 11);
+}
+
+void CPU8068::mov_rm_8(const uint8_t mod_rm) {
+    uint8_t mode =   ((mod_rm >> 6) & 0b011);
+    uint8_t source_bits = ((mod_rm >> 3) & 0b111);
+    uint8_t dest_bits =   ((mod_rm >> 0) & 0b111);
+
+    if (mode == 0b11) {
+        uint8_t *source;
+        uint8_t *dest;
+        switch (source_bits) {
+            case 0b000:
+                source = &AL;
+                break;
+            case 0b001:
+                source = &CL;
+                break;
+            case 0b010:
+                source = &DL;
+                break;
+            case 0b011:
+                source = &BL;
+                break;
+            case 0b100:
+                source = &AH;
+                break;
+            case 0b101:
+                source = &CH;
+                break;
+            case 0b110:
+                source = &DH;
+                break;
+            case 0b111:
+                source = &BH;
+                break;
+            default:
+                mylog("Unsupported source");
+                return;
+        }
+
+        switch (dest_bits) {
+            case 0b000:
+                dest = &AL;
+                break;
+            case 0b001:
+                dest = &CL;
+                break;
+            case 0b010:
+                dest = &DL;
+                break;
+            case 0b011:
+                dest = &BL;
+                break;
+            case 0b100:
+                dest = &AH;
+                break;
+            case 0b101:
+                dest = &CH;
+                break;
+            case 0b110:
+                dest = &DH;
+                break;
+            case 0b111:
+                dest = &BH;
+                break;
+            default:
+                mylog("Unsupported destination");
+                return;
+        }
+
+        *dest = *source;
+    } else {
+        mylog("Unsupported 0x88");
     }
 }

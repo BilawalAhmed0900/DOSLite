@@ -24,6 +24,9 @@ public:
     void interrupt(uint8_t num);
     void dos_interrupt();
 
+    void set_flags_add(uint16_t lhs, uint16_t rhs, uint32_t result, uint16_t width);
+    void mov_rm_8(uint8_t mod_rm);
+
     friend class LoadToCPU;
 
 private:
