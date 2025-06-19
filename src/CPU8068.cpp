@@ -4,7 +4,7 @@
 
 #include "CPU8068.h"
 
-#include <algorithm>
+#include <iostream>
 
 #include "logger.h"
 #include "ProgramExitedException.h"
@@ -86,6 +86,7 @@ void CPU8068::execute() {
             case 0x40 ... 0x47:
                 *reg16[opcode - 0x40] += 1;
                 break;
+            // DEC
             case 0x48 ... 0x4F:
                 *reg16[opcode - 0x48] -= 1;
                 break;

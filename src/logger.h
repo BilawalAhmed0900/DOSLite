@@ -5,7 +5,7 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <iostream>
+#include <fstream>
 #include <string>
 
 template <typename ...Args>
@@ -14,12 +14,13 @@ void mylog(const std::string& format, Args... args) {
 
     char *buffer = new (std::nothrow) char[bufferNeeded];
     if (!buffer) {
-        std::cerr << "Out of memory" << std::endl;
         return;
     }
 
     std::snprintf(buffer, bufferNeeded, format.c_str(), args...);
-    std::cout << buffer << std::endl;
+
+    std::ofstream logFile("log.txt", std::ios::app);
+    logFile << buffer << std::endl;
     delete[] buffer;
 }
 
