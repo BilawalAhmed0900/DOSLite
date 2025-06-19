@@ -27,65 +27,36 @@ void CPU8068::execute() {
         const uint8_t opcode = mem8(CS, IP++);
         switch (opcode) {
             // MOV
-            case 0xB0:
-                AL = mem8(CS, IP++);
+            case 0xA2 ... 0xA3: {
+                const uint16_t address = mem16(CS, IP);
+                IP += 2;
+
+                if (opcode == 0xA3) {
+                    mem16(DS, address) = AX;
+                } else {
+                    mem8(DS, address) = AL;
+                }
                 break;
-            case 0xB1:
-                CL = mem8(CS, IP++);
+            }
+            case 0xB0 ... 0xB7:
+                *reg8 [opcode - 0xB0] = mem8(CS, IP++);
                 break;
-            case 0xB2:
-                DL = mem8(CS, IP++);
-                break;
-            case 0xB3:
-                BL = mem8(CS, IP++);
-                break;
-            case 0xB4:
-                AH = mem8(CS, IP++);
-                break;
-            case 0xB5:
-                CH = mem8(CS, IP++);
-                break;
-            case 0xB6:
-                DH = mem8(CS, IP++);
-                break;
-            case 0xB7:
-                BH = mem8(CS, IP++);
-                break;
-            case 0xB8:
-                AX = mem16(CS, IP);
+            case 0xB8 ... 0xBF:
+                *reg16[opcode - 0xB8] = mem16(CS, IP);
                 IP += 2;
                 break;
-            case 0xB9:
-                CX = mem16(CS, IP);
-                IP += 2;
-                break;
-            case 0xBA:
-                DX = mem16(CS, IP);
-                IP += 2;
-                break;
-            case 0xBB:
-                BX = mem16(CS, IP);
-                IP += 2;
-                break;
-            case 0xBC:
-                SP = mem16(CS, IP);
-                IP += 2;
-                break;
-            case 0xBD:
-                BP = mem16(CS, IP);
-                IP += 2;
-                break;
-            case 0xBE:
-                SI = mem16(CS, IP);
-                IP += 2;
-                break;
-            case 0xBF:
-                DI = mem16(CS, IP);
-                IP += 2;
-                break;
-            case 0x88: {
+            case 0x88 ... 0x89: {
                 const uint8_t mod_rm = mem8(CS, IP++);
-                mov_rm_8(mod_rm);
+
+                const bool is_16bit = (opcode == 0x89);
+                mov_rm_reg(mod_rm, is_16bit ? 16 : 8);
+                break;
+            }
+            case 0x8A ... 0x8B: {
+                const uint8_t mod_rm = mem8(CS, IP++);
+
+                const bool is_16bit = (opcode == 0x8B);
+                mov_reg_rm(mod_rm, is_16bit ? 16 : 8);
                 break;
             }
             // INT
@@ -111,6 +82,13 @@ void CPU8068::execute() {
                 AX = result & 0xFFFF;
                 break;
             }
+            // INC
+            case 0x40 ... 0x47:
+                *reg16[opcode - 0x40] += 1;
+                break;
+            case 0x48 ... 0x4F:
+                *reg16[opcode - 0x48] -= 1;
+                break;
             default:
                 mylog("Unsupported opcode '%.02X'", static_cast<int>(opcode));
                 return;
@@ -230,76 +208,112 @@ void CPU8068::set_flags_add(const uint16_t lhs, const uint16_t rhs, const uint32
     FLAGS |= ((OF & 0x1) << 11);
 }
 
-void CPU8068::mov_rm_8(const uint8_t mod_rm) {
-    uint8_t mode =   ((mod_rm >> 6) & 0b011);
-    uint8_t source_bits = ((mod_rm >> 3) & 0b111);
-    uint8_t dest_bits =   ((mod_rm >> 0) & 0b111);
+void CPU8068::mov_rm_reg(const uint8_t mod_rm, const uint8_t width) {
+    if (width != 8 && width != 16) {
+        mylog("Unsupported width in mov_rm_reg");
+        return;
+    }
+    const uint8_t mode = ((mod_rm >> 6) & 0b011);
+    const uint8_t reg  = ((mod_rm >> 3) & 0b111);
+    const uint8_t r_m  = ((mod_rm >> 0) & 0b111);
 
     if (mode == 0b11) {
-        uint8_t *source;
-        uint8_t *dest;
-        switch (source_bits) {
-            case 0b000:
-                source = &AL;
-                break;
-            case 0b001:
-                source = &CL;
-                break;
-            case 0b010:
-                source = &DL;
-                break;
-            case 0b011:
-                source = &BL;
-                break;
-            case 0b100:
-                source = &AH;
-                break;
-            case 0b101:
-                source = &CH;
-                break;
-            case 0b110:
-                source = &DH;
-                break;
-            case 0b111:
-                source = &BH;
-                break;
+        *reg8[r_m] = *reg8[reg];
+    } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        switch (r_m) {
+            case 0b000: address = BX + SI; break;
+            case 0b001: address = BX + DI; break;
+            case 0b010: address = BP + SI; break;
+            case 0b011: address = BP + DI; break;
+            case 0b100: address = SI;      break;
+            case 0b101: address = DI;      break;
+            case 0b110: {
+                if (mode == 0b01 || mode == 0b10) {
+                    address = BP;
+                    break;
+                }
+                if (mode == 0b00) {
+                    address = mem16(CS, IP);
+                    IP += 2;
+                    break;
+                }
+                mylog("Unsupported r/m bit");
+                return;
+            }
+            case 0b111: address = BX;      break;
             default:
-                mylog("Unsupported source");
+                mylog("Unsupported r/m bit");
                 return;
         }
-
-        switch (dest_bits) {
-            case 0b000:
-                dest = &AL;
-                break;
-            case 0b001:
-                dest = &CL;
-                break;
-            case 0b010:
-                dest = &DL;
-                break;
-            case 0b011:
-                dest = &BL;
-                break;
-            case 0b100:
-                dest = &AH;
-                break;
-            case 0b101:
-                dest = &CH;
-                break;
-            case 0b110:
-                dest = &DH;
-                break;
-            case 0b111:
-                dest = &BH;
-                break;
-            default:
-                mylog("Unsupported destination");
-                return;
+        if (mode == 0b01) {
+            address += static_cast<int8_t>(mem8(CS, IP++));
+        } else if (mode == 0b10) {
+            address += static_cast<int16_t>(mem16(CS, IP));
+            IP += 2;
         }
 
-        *dest = *source;
+        if (width == 8) {
+            mem8(DS, address) = *reg8[reg];
+        } else if (width == 16) {
+            mem16(DS, address) = *reg16[reg];
+        }
     } else {
-        mylog("Unsupported 0x88");
+        mylog("Unsupported 0x88, 0x89");
+    }
+}
+
+void CPU8068::mov_reg_rm(const uint8_t mod_rm, const uint8_t width) {
+    if (width != 8 && width != 16) {
+        mylog("Unsupported width in mov_reg_rm");
+        return;
+    }
+    const uint8_t mode = ((mod_rm >> 6) & 0b011);
+    const uint8_t reg  = ((mod_rm >> 3) & 0b111);
+    const uint8_t r_m  = ((mod_rm >> 0) & 0b111);
+
+    if (mode == 0b11) {
+        *reg8[reg] = *reg8[r_m];
+    } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        switch (r_m) {
+            case 0b000: address = BX + SI; break;
+            case 0b001: address = BX + DI; break;
+            case 0b010: address = BP + SI; break;
+            case 0b011: address = BP + DI; break;
+            case 0b100: address = SI;      break;
+            case 0b101: address = DI;      break;
+            case 0b110: {
+                if (mode == 0b01 || mode == 0b10) {
+                    address = BP;
+                    break;
+                }
+                if (mode == 0b00) {
+                    address = mem16(CS, IP);
+                    IP += 2;
+                    break;
+                }
+                mylog("Unsupported r/m bit");
+                return;
+            }
+            case 0b111: address = BX;      break;
+            default:
+                mylog("Unsupported r/m bit");
+                return;
+        }
+        if (mode == 0b01) {
+            address += static_cast<int8_t>(mem8(CS, IP++));
+        } else if (mode == 0b10) {
+            address += static_cast<int16_t>(mem16(CS, IP));
+            IP += 2;
+        }
+
+        if (width == 8) {
+            *reg8[reg] = mem8(DS, address);
+        } else if (width == 16) {
+            *reg16[reg] = mem16(DS, address);
+        }
+    } else {
+        mylog("Unsupported 0x8A, 0x8B");
     }
 }

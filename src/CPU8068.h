@@ -25,7 +25,8 @@ public:
     void dos_interrupt();
 
     void set_flags_add(uint16_t lhs, uint16_t rhs, uint32_t result, uint16_t width);
-    void mov_rm_8(uint8_t mod_rm);
+    void mov_rm_reg(uint8_t mod_rm, uint8_t width);
+    void mov_reg_rm(uint8_t mod_rm, uint8_t width);
 
     friend class LoadToCPU;
 
@@ -62,6 +63,13 @@ private:
     uint16_t CS, DS, SS, ES;
     uint16_t IP;
     uint16_t FLAGS;
+
+    /*
+     *  All instruction are in sequence following this register sequence
+     */
+    constexpr static size_t REGISTER_COUNT = 8;
+    uint8_t  *reg8 [REGISTER_COUNT] = { &AL, &CL, &DL, &BL, &AH, &CH, &DH, &BH };
+    uint16_t *reg16[REGISTER_COUNT] = { &AX, &CX, &DX, &BX, &SP, &BP, &SI, &DI };
 
     constexpr static size_t MEMORY_SIZE = 1 * 1024 * 1024;
     constexpr static size_t SEGMENT_SIZE = 64 * 1024;
