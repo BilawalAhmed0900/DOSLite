@@ -26,7 +26,10 @@ public:
 
     void set_flags_add(uint16_t lhs, uint16_t rhs, uint32_t result, uint16_t width);
     void mov_rm_reg(uint8_t mod_rm, uint8_t width);
+    void mov_rm_imm(uint8_t mod_rm, uint8_t width);
     void mov_reg_rm(uint8_t mod_rm, uint8_t width);
+
+    bool get_address_mode_rm(uint8_t mode, uint8_t r_m, uint16_t &address);
 
     friend class LoadToCPU;
 
