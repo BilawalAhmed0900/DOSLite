@@ -6,8 +6,8 @@
 #define LOADTOCPU_H
 
 
-#include "COM.h"
-#include "CPU8068.h"
+#include "../ExecutableFiles/COM.h"
+#include "../CPU/CPU8068.h"
 
 
 class LoadToCPU {

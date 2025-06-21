@@ -10,9 +10,10 @@
 class ProgramExitedException : public std::exception {
 public:
     explicit ProgramExitedException(int code);
+    virtual ~ProgramExitedException();
+
+public:
     int code;
 };
-
-
 
 #endif //PROGRAMEXITEDEXCEPTION_H

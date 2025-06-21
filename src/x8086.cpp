@@ -1,13 +1,13 @@
 ﻿#include <iostream>
 #include <string_view>
 
-#include "COM.h"
-#include "CPU8068.h"
-#include "EnableCursorControl.h"
-#include "LoadToCpu.h"
-#include "logger.h"
-#include "MZExe.h"
-#include "ProgramExitedException.h"
+#include "CPU/CPU8068.h"
+#include "Exceptions/ProgramExitedException.h"
+#include "ExecutableFiles/COM.h"
+#include "ExecutableFiles/MZExe.h"
+#include "Utils/EnableCursorControl.h"
+#include "Utils/LoadToCpu.h"
+#include "Utils/logger.h"
 
 int main(const int argc, const char *argv[])
 {

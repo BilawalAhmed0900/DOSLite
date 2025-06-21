@@ -14,19 +14,19 @@ project ("x8086")
 # Add source to this project's executable.
 add_executable (x8086
         src/x8086.cpp
-        src/CPU8068.cpp
-        src/CPU8068.h
-        src/MZExe.cpp
-        src/MZExe.h
-        src/logger.h
-        src/Com.cpp
-        src/Com.h
-        src/LoadToCpu.cpp
-        src/LoadToCpu.h
-        src/ProgramExitedException.cpp
-        src/ProgramExitedException.h
-        src/EnableCursorControl.cpp
-        src/EnableCursorControl.h)
+        src/CPU/CPU8068.cpp
+        src/CPU/CPU8068.h
+        src/ExecutableFiles/MZExe.cpp
+        src/ExecutableFiles/MZExe.h
+        src/Utils/logger.h
+        src/ExecutableFiles/COM.cpp
+        src/ExecutableFiles/COM.h
+        src/Utils/LoadToCpu.cpp
+        src/Utils/LoadToCpu.h
+        src/Exceptions/ProgramExitedException.cpp
+        src/Exceptions/ProgramExitedException.h
+        src/Utils/EnableCursorControl.cpp
+        src/Utils/EnableCursorControl.h)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET x8086 PROPERTY CXX_STANDARD 20)

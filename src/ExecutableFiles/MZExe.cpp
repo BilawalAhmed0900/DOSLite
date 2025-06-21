@@ -7,7 +7,7 @@
 #include <cstring>
 #include <filesystem>
 
-#include "logger.h"
+#include "../Utils/logger.h"
 
 template <typename Type>
 void read(std::ifstream &iif, Type& var) {

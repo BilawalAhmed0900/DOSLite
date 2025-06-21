@@ -6,8 +6,8 @@
 
 #include <iostream>
 
-#include "logger.h"
-#include "ProgramExitedException.h"
+#include "../Utils/logger.h"
+#include "../Exceptions/ProgramExitedException.h"
 
 CPU8068::CPU8068(): memory(MEMORY_SIZE, 0) {
     AX = BX = CX = DX = 0;

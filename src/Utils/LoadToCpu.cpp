@@ -3,7 +3,6 @@
 //
 
 #include "LoadToCpu.h"
-
 #include "logger.h"
 
 void LoadToCPU::load(CPU8068 &cpu, const COM &com) {
