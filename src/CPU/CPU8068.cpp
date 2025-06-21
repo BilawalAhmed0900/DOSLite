@@ -27,6 +27,8 @@ void CPU8068::execute() {
         const uint8_t opcode = mem8(CS, IP++);
         switch (opcode) {
             // MOV
+            // mov moffs8       AX  (0xA2)
+            // mov moffs16/32   AL  (0xA3)
             case 0xA2 ... 0xA3: {
                 const uint16_t address = mem16(CS, IP);
                 IP += 2;
@@ -38,13 +40,19 @@ void CPU8068::execute() {
                 }
                 break;
             }
+            // B0 + r
+            // mov r8, imm8
             case 0xB0 ... 0xB7:
                 *reg8 [opcode - 0xB0] = mem8(CS, IP++);
                 break;
+            // B8 + r
+            // mov r16, imm16
             case 0xB8 ... 0xBF:
                 *reg16[opcode - 0xB8] = mem16(CS, IP);
                 IP += 2;
                 break;
+            // mov r/m8      r8   (0x88)
+            // mov r/m16/32  r32  (0x89)
             case 0x88 ... 0x89: {
                 const uint8_t mod_rm = mem8(CS, IP++);
 
@@ -52,6 +60,8 @@ void CPU8068::execute() {
                 mov_rm_reg(mod_rm, is_16bit ? 16 : 8);
                 break;
             }
+            // mov r8     r/m8        (0x8A)
+            // mov r16/32 r/m16/32    (0x8B)
             case 0x8A ... 0x8B: {
                 const uint8_t mod_rm = mem8(CS, IP++);
 
@@ -60,12 +70,14 @@ void CPU8068::execute() {
                 break;
             }
             // INT
+            // int imm8
             case 0xCD: {
                 const uint8_t num = mem8(CS, IP++);
                 interrupt(num);
                 break;
             }
             // ADD
+            // add AL imm8
             case 0x04: {
                 const uint8_t rhs = mem8(CS, IP++);
                 const uint32_t result = AL + rhs;
@@ -73,6 +85,7 @@ void CPU8068::execute() {
                 AL = result & 0xFF;
                 break;
             }
+            // add eAX imm16/32
             case 0x05: {
                 const uint16_t rhs = mem16(CS, IP);
                 IP += 2;
@@ -83,10 +96,12 @@ void CPU8068::execute() {
                 break;
             }
             // INC
+            // INC r16/32
             case 0x40 ... 0x47:
                 *reg16[opcode - 0x40] += 1;
                 break;
             // DEC
+            // DEC r16/32
             case 0x48 ... 0x4F:
                 *reg16[opcode - 0x48] -= 1;
                 break;
