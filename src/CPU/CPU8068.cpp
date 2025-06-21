@@ -104,16 +104,49 @@ void CPU8068::execute() {
                 AX = result & 0xFFFF;
                 break;
             }
+            // SUB
+            // sub AL imm8
+            case 0x2C: {
+                const uint8_t rhs = mem8(CS, IP++);
+                const uint32_t result = AL - rhs;
+                set_flags_sub(AL, rhs, result, 8);
+                AL = result & 0xFF;
+                break;
+            }
+            // sub eAX imm16/32
+            case 0x2D: {
+                const uint16_t rhs = mem16(CS, IP);
+                IP += 2;
+
+                const uint32_t result = AX - rhs;
+                set_flags_sub(AX, rhs, result, 16);
+                AX = result & 0xFFFF;
+                break;
+            }
             // INC
             // INC r16/32
-            case 0x40 ... 0x47:
-                *reg16[opcode - 0x40] += 1;
+            case 0x40 ... 0x47: {
+                const uint8_t oldCF = CF();
+
+                const uint32_t result = *reg16[opcode - 0x40] + 1;
+                set_flags_add(*reg16[opcode - 0x40], 1, result, 16);
+                *reg16[opcode - 0x40] = result;
+
+                SetCF(oldCF);
                 break;
+            }
             // DEC
             // DEC r16/32
-            case 0x48 ... 0x4F:
-                *reg16[opcode - 0x48] -= 1;
+            case 0x48 ... 0x4F: {
+                const uint8_t oldCF = CF();
+
+                const uint32_t result = *reg16[opcode - 0x40] - 1;
+                set_flags_sub(*reg16[opcode - 0x40], 1, result, 16);
+                *reg16[opcode - 0x40] = result;
+
+                SetCF(oldCF);
                 break;
+            }
             // JMP
             // jmp e8
             case 0xEB: {
@@ -128,6 +161,22 @@ void CPU8068::execute() {
                 IP += offset;
                 break;
             }
+            // DAA
+            case 0x27:
+                DAA();
+                break;
+            // DAS
+            case 0x2F:
+                DAS();
+                break;
+            // AAA
+            case 0x37:
+                AAA();
+                break;
+            // AAS
+            case 0x3F:
+                AAS();
+                break;
             // NOP
             case 0x90:
                 break;
@@ -196,7 +245,7 @@ void CPU8068::dos_interrupt() {
     }
 }
 
-static uint8_t count_set_bits(uint32_t num) {
+static uint8_t count_set_bits(const uint32_t num) {
     uint8_t count = 0;
     for (int i = 0; i < sizeof(num) * 8; i++) {
         count += (num >> i) & 1;
@@ -205,49 +254,97 @@ static uint8_t count_set_bits(uint32_t num) {
     return count;
 }
 
-void CPU8068::set_flags_add(const uint16_t lhs, const uint16_t rhs, const uint32_t result, const uint16_t width) {
+static bool is_AF(const uint16_t lhs, const uint16_t rhs, uint32_t const result) {
+    // Auxiliary flag
+    // A carry flag that is used to check if carry has happened
+    // from left nibble to right nibble
+    //
+    //   |        |
+    //   |-Left   |-Right
+    // 0b0000     0000
+    //
+    // Instead of manually checking, used the formula from here
+    // https://retrocomputing.stackexchange.com/questions/11262/can-someone-explain-this-algorithm-used-to-compute-the-auxiliary-carry-flag
+    return ((lhs ^ rhs ^ result) & 0x10) != 0;
+}
+
+void CPU8068::adjust_flags(const uint32_t result, const uint8_t width) {
+    if (width != 8 && width != 16) {
+        mylog("Unsupported width in adjust_flags");
+        return;
+    }
+
     // Since the maximum sum can only go maximum 1 bit ahead
     // e.g., 0xFF + 0xFF = 0x1FE,
     // Carry Flag
-    uint8_t CF = (result >> width) & 0x1;
+    const uint8_t CF = (result >> width) & 0x1;
 
     // Whole result is 0 or not, after addition, in the given width
     // e.g., 0x80 + 0x80 = 0x100, i.e. 0 is the 8 bit width
     // Zero Flag
-    uint8_t ZF = (result & ((1u << width) - 1)) == 0;
+    const uint8_t ZF = (result & ((1u << width) - 1)) == 0;
 
     // Left most digit in the width of the result is 1
     // Sign Flag
-    uint8_t SF = (result & (1u << (width - 1))) != 0;
+    const uint8_t SF = (result & (1u << (width - 1))) != 0;
 
-    // Auxiliary flag
-    // 0x10 = 0b1'0000
-    // Check if the 4th flag has been changed,
-    // Neat trick by chatgpt :)
-    uint8_t AF = ((lhs ^ rhs ^ result) & 0x10) != 0;
-
-    uint8_t lhs_sign = (lhs    & (1u << (width - 1))) != 0;
-    uint8_t rhs_sign = (rhs    & (1u << (width - 1))) != 0;
-    uint8_t res_sign = (result & (1u << (width - 1))) != 0;
-    // Overflow Flag
-    uint8_t OF = (lhs_sign == rhs_sign) && (lhs_sign != res_sign);
-
-    // Lowest 8 bit have even number of ones
+    // Lowest 8 bit have even numbers of ones
     // Parity Flag
-    uint8_t PF = count_set_bits(result & ((1 << width) - 1)) & 1;
+    const uint8_t PF = !(count_set_bits(result & 0xFF) & 1);
 
-    FLAGS &= ~(1 << 0);  // Clear out Carry Flag
-    FLAGS &= ~(1 << 2);  // Clear out Parity Flag
-    FLAGS &= ~(1 << 4);  // Clear out Auxiliary Flag
-    FLAGS &= ~(1 << 6);  // Clear out Zero Flag
-    FLAGS &= ~(1 << 7);  // Clear out Sign Flag
-    FLAGS &= ~(1 << 11); // Clear out Overflow Flag
-    FLAGS |= ((CF & 0x1) << 0);
-    FLAGS |= ((PF & 0x1) << 2);
-    FLAGS |= ((AF & 0x1) << 4);
-    FLAGS |= ((ZF & 0x1) << 6);
-    FLAGS |= ((SF & 0x1) << 7);
-    FLAGS |= ((OF & 0x1) << 11);
+    SetCF(CF);
+    SetPF(PF);
+    SetZF(ZF);
+    SetSF(SF);
+}
+
+void CPU8068::set_flags_add(const uint16_t lhs, const uint16_t rhs, const uint32_t result, const uint16_t width) {
+    if (width != 8 && width != 16) {
+        mylog("Unsupported width in set_flags_add");
+        return;
+    }
+
+    const uint8_t AF = is_AF(lhs, rhs, result) ? 1 : 0;
+    const uint8_t lhs_sign = (lhs    & (1u << (width - 1))) != 0;
+    const uint8_t rhs_sign = (rhs    & (1u << (width - 1))) != 0;
+    const uint8_t res_sign = (result & (1u << (width - 1))) != 0;
+    // Overflow Flag
+    // Example: We went from a region of negativeness to positiveness
+    // i.e., 0x80 - 0x1 = 0x7F that is positive if signess is concerned
+    //       0x80 is negative
+    //       0x01 is positive
+    //       0x7F is positive
+    const uint8_t OF = (lhs_sign == rhs_sign) && (lhs_sign != res_sign);
+
+
+    SetAF(AF);
+    SetOF(OF);
+
+    adjust_flags(result, width);
+}
+
+void CPU8068::set_flags_sub(const uint16_t lhs, const uint16_t rhs, const uint32_t result, const uint16_t width) {
+    if (width != 8 && width != 16) {
+        mylog("Unsupported width in set_flags_add");
+        return;
+    }
+
+    const uint8_t AF = is_AF(lhs, rhs, result) ? 1 : 0;
+    const uint8_t lhs_sign = (lhs    & (1u << (width - 1))) != 0;
+    const uint8_t rhs_sign = (rhs    & (1u << (width - 1))) != 0;
+    const uint8_t res_sign = (result & (1u << (width - 1))) != 0;
+    // Overflow Flag
+    // Example: We went from a region of negativeness to positiveness
+    // i.e., 0x80 - 0x1 = 0x7F that is positive if signess is concerned
+    //       0x80 is negative
+    //       0x01 is positive
+    //       0x7F is positive
+    const uint8_t OF = (lhs_sign != rhs_sign) && (lhs_sign != res_sign);
+
+    SetAF(AF);
+    SetOF(OF);
+
+    adjust_flags(result, width);
 }
 
 void CPU8068::mov_rm_reg(const uint8_t mod_rm, const uint8_t width) {
@@ -372,4 +469,136 @@ bool CPU8068::get_address_mode_rm(const uint8_t mode, const uint8_t r_m, uint16_
     }
 
     return true;
+}
+
+void CPU8068::DAA() {
+    const uint8_t oldAL = AL;
+    uint8_t oldCF = CF();
+    SetCF(0);
+
+    uint16_t newAL = AL;
+    if (((AL & 0xF) > 9) || AF()) {
+        newAL += 6;
+        SetCF(oldCF | ((newAL >> 8) & 0x1));
+        SetAF(is_AF(oldAL, 0x06, newAL));
+    } else {
+        SetAF(0);
+    }
+
+    if ((oldAL > 0x99) || oldCF) {
+        newAL += 0x60;
+        SetCF(1);
+    } else {
+        SetCF(0);
+    }
+
+    oldCF = CF();
+    adjust_flags(newAL, 8);
+    SetCF(oldCF);
+    AL = static_cast<uint8_t>(newAL);
+}
+
+void CPU8068::DAS() {
+    const uint8_t oldAL = AL;
+    uint8_t oldCF = CF();
+    SetCF(0);
+
+    uint16_t newAL = oldAL;
+    if (((oldAL & 0xF) > 9) || AF()) {
+        newAL = oldAL - 0x06;
+
+        SetCF(oldCF | ((oldAL < 0x06) ? 1 : 0));
+        SetAF(is_AF(oldAL, 0x06, newAL));
+    }
+
+    if ((oldAL > 0x99) || oldCF) {
+        newAL -= 0x60;
+        SetCF(1);
+    }
+
+    oldCF = CF();
+    adjust_flags(newAL, 8);
+    SetCF(oldCF);
+    AL = static_cast<uint8_t>(newAL);
+}
+
+void CPU8068::AAA() {
+    if (((AL & 0x0F) > 9) || AF()) {
+        AX += 0x106;
+        SetAF(1);
+        SetCF(1);
+    } else {
+        SetCF(0);
+        SetAF(0);
+    }
+
+    AL &= 0x0F;
+}
+
+void CPU8068::AAS() {
+    if (((AL & 0x0F) > 9) || AF()) {
+        AX -= 0x6;
+        AH -= 0x1;
+        SetAF(1);
+        SetCF(1);
+    } else {
+        SetCF(0);
+        SetAF(0);
+    }
+
+    AL &= 0x0F;
+}
+
+uint8_t CPU8068::CF() const {
+    return FLAGS & 0x1;
+}
+
+void CPU8068::SetCF(const uint8_t val) {
+    FLAGS &= ~CF_MASK;
+    FLAGS |= (val ? CF_MASK : 0);
+}
+
+uint8_t CPU8068::PF() const {
+    return (FLAGS >> 2) & 0x1;
+}
+
+void CPU8068::SetPF(const uint8_t val) {
+    FLAGS &= ~PF_MASK;
+    FLAGS |= (val ? PF_MASK : 0);
+}
+
+uint8_t CPU8068::ZF() const {
+    return (FLAGS >> 6) & 0x1;
+}
+
+void CPU8068::SetZF(const uint8_t val) {
+    FLAGS &= ~ZF_MASK;
+    FLAGS |= (val ? ZF_MASK : 0);
+}
+
+uint8_t CPU8068::SF() const {
+    return (FLAGS >> 7) & 0x1;
+}
+
+void CPU8068::SetSF(const uint8_t val) {
+    FLAGS &= ~SF_MASK;
+    FLAGS |= (val ? SF_MASK : 0);
+}
+
+uint8_t CPU8068::AF() const {
+    return (FLAGS >> 4) & 0x1;
+}
+
+void CPU8068::SetAF(const uint8_t val) {
+    FLAGS &= ~AF_MASK;
+    FLAGS |= (val ? AF_MASK : 0);
+}
+
+uint8_t CPU8068::OF() const {
+    return (FLAGS >> 11) & 0x1;
+}
+
+void CPU8068::SetOF(const uint8_t val) {
+    FLAGS &= ~OF_MASK;
+    FLAGS |= (val ? OF_MASK : 0);
 }

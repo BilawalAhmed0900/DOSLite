@@ -24,12 +24,21 @@ public:
     void interrupt(uint8_t num);
     void dos_interrupt();
 
+    void adjust_flags(uint32_t result, uint8_t width);
+
     void set_flags_add(uint16_t lhs, uint16_t rhs, uint32_t result, uint16_t width);
+    void set_flags_sub(uint16_t lhs, uint16_t rhs, uint32_t result, uint16_t width);
+
     void mov_rm_reg(uint8_t mod_rm, uint8_t width);
     void mov_rm_imm(uint8_t mod_rm, uint8_t width);
     void mov_reg_rm(uint8_t mod_rm, uint8_t width);
 
     bool get_address_mode_rm(uint8_t mode, uint8_t r_m, uint16_t &address);
+
+    void DAA();
+    void DAS();
+    void AAA();
+    void AAS();
 
     friend class LoadToCPU;
 
@@ -65,7 +74,27 @@ private:
     uint16_t SP, BP, SI, DI;
     uint16_t CS, DS, SS, ES;
     uint16_t IP;
+
+    static constexpr uint16_t CF_MASK = 1 << 0;
+    static constexpr uint16_t PF_MASK = 1 << 2;
+    static constexpr uint16_t ZF_MASK = 1 << 6;
+    static constexpr uint16_t SF_MASK = 1 << 7;
+    static constexpr uint16_t AF_MASK = 1 << 4;
+    static constexpr uint16_t OF_MASK = 1 << 11;
     uint16_t FLAGS;
+
+    [[nodiscard]] uint8_t CF() const;
+    void SetCF(uint8_t val);
+    [[nodiscard]] uint8_t PF() const;
+    void SetPF(uint8_t val);
+    [[nodiscard]] uint8_t ZF() const;
+    void SetZF(uint8_t val);
+    [[nodiscard]] uint8_t SF() const;
+    void SetSF(uint8_t val);
+    [[nodiscard]] uint8_t AF() const;
+    void SetAF(uint8_t val);
+    [[nodiscard]] uint8_t OF() const;
+    void SetOF(uint8_t val);
 
     /*
      *  All instruction are in sequence following this register sequence
