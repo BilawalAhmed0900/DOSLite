@@ -89,7 +89,7 @@ void CPU8068::execute() {
             // add AL imm8
             case 0x04: {
                 const uint8_t rhs = mem8(CS, IP++);
-                const uint32_t result = AL + rhs;
+                const uint16_t result = AL + rhs;
                 set_flags_add(AL, rhs, result, 8);
                 AL = result & 0xFF;
                 break;
@@ -108,7 +108,7 @@ void CPU8068::execute() {
             // sub AL imm8
             case 0x2C: {
                 const uint8_t rhs = mem8(CS, IP++);
-                const uint32_t result = AL - rhs;
+                const uint16_t result = AL - rhs;
                 set_flags_sub(AL, rhs, result, 8);
                 AL = result & 0xFF;
                 break;
@@ -140,8 +140,8 @@ void CPU8068::execute() {
             case 0x48 ... 0x4F: {
                 const uint8_t oldCF = CF();
 
-                const uint32_t result = *reg16[opcode - 0x40] - 1;
-                set_flags_sub(*reg16[opcode - 0x40], 1, result, 16);
+                const uint32_t result = *reg16[opcode - 0x48] - 1;
+                set_flags_sub(*reg16[opcode - 0x48], 1, result, 16);
                 *reg16[opcode - 0x40] = result;
 
                 SetCF(oldCF);
@@ -180,6 +180,40 @@ void CPU8068::execute() {
             // NOP
             case 0x90:
                 break;
+            // CMP
+            // cmp AL imm8
+            case 0x3C: {
+                const uint8_t rhs = mem8(CS, IP++);
+                const uint16_t result = static_cast<uint16_t>(AL) - rhs;
+                set_flags_sub(AL, rhs, result, 8);
+                break;
+            }
+            // cmp eAX imm16/32
+            case 0x3D: {
+                const uint16_t rhs = mem16(CS, IP);
+                IP += 2;
+
+                const uint32_t result = static_cast<uint32_t>(AX) - rhs;
+                set_flags_sub(AX, rhs, result, 16);
+                break;
+            }
+            // JE
+            // je rel8
+            case 0x74: {
+                int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+                if (ZF()) {
+                    IP += offset;
+                }
+                break;
+            }
+            // jne rel8
+            case 0x75: {
+                int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+                if (!ZF()) {
+                    IP += offset;
+                }
+                break;
+            }
             default:
                 mylog("Unsupported opcode '%.02X'", static_cast<int>(opcode));
                 return;
