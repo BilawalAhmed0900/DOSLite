@@ -472,6 +472,8 @@ void CPU8068::mov_reg_rm(const uint8_t mod_rm, const uint8_t width) {
 }
 
 bool CPU8068::get_address_mode_rm(const uint8_t mode, const uint8_t r_m, uint16_t &address) {
+	// https://en.wikipedia.org/wiki/ModR/M
+	// 16-bit mode
     switch (r_m) {
         case 0b000: address = BX + SI; break;
         case 0b001: address = BX + DI; break;
@@ -505,6 +507,32 @@ bool CPU8068::get_address_mode_rm(const uint8_t mode, const uint8_t r_m, uint16_
     return true;
 }
 
+// Intel® 64 and IA-32 Architectures Software Developer’s Manual
+/*
+	IF 64-Bit Mode
+	THEN
+		#UD;
+	ELSE
+		old_AL := AL;
+		old_CF := CF;
+		CF := 0;
+		IF (((AL AND 0FH) > 9) or AF = 1)
+		THEN
+			AL := AL + 6;
+			CF := old_CF or (Carry from AL := AL + 6);
+			AF := 1;
+		ELSE
+			AF := 0;
+		FI;
+		IF ((old_AL > 99H) or (old_CF = 1))
+		THEN
+			AL := AL + 60H;
+			CF := 1;
+		ELSE
+			CF := 0;
+		FI;
+	FI;
+*/
 void CPU8068::DAA() {
     const uint8_t oldAL = AL;
     uint8_t oldCF = CF();
@@ -532,6 +560,30 @@ void CPU8068::DAA() {
     AL = static_cast<uint8_t>(newAL);
 }
 
+// Intel® 64 and IA-32 Architectures Software Developer’s Manual
+/*
+IF 64-Bit Mode
+THEN
+	#UD;
+ELSE
+	old_AL := AL;
+	old_CF := CF;
+	CF := 0;
+	IF (((AL AND 0FH) > 9) or AF = 1)
+	THEN
+		AL := AL - 6;
+		CF := old_CF or (Borrow from AL := AL − 6);
+		AF := 1;
+	ELSE
+		AF := 0;
+	FI;
+	IF ((old_AL > 99H) or (old_CF = 1))
+	THEN
+		AL := AL − 60H;
+		CF := 1;
+	FI;
+FI;
+*/
 void CPU8068::DAS() {
     const uint8_t oldAL = AL;
     uint8_t oldCF = CF();
@@ -556,6 +608,24 @@ void CPU8068::DAS() {
     AL = static_cast<uint8_t>(newAL);
 }
 
+// Intel® 64 and IA-32 Architectures Software Developer’s Manual
+/*
+IF 64-Bit Mode
+THEN
+	#UD;
+ELSE
+	IF ((AL AND 0FH) > 9) or (AF = 1)
+	THEN
+		AX := AX + 106H;
+		AF := 1;
+		CF := 1;
+	ELSE
+		AF := 0;
+		CF := 0;
+	FI;
+	AL := AL AND 0FH;
+FI;
+*/
 void CPU8068::AAA() {
     if (((AL & 0x0F) > 9) || AF()) {
         AX += 0x106;
@@ -569,6 +639,26 @@ void CPU8068::AAA() {
     AL &= 0x0F;
 }
 
+// Intel® 64 and IA-32 Architectures Software Developer’s Manual
+/*
+IF 64-bit mode
+THEN
+	#UD;
+ELSE
+	IF ((AL AND 0FH) > 9) or (AF = 1)
+	THEN
+		AX := AX – 6;
+		AH := AH – 1;
+		AF := 1;
+		CF := 1;
+		AL := AL AND 0FH;
+	ELSE
+		CF := 0;
+		AF := 0;
+		AL := AL AND 0FH;
+	FI;
+FI;
+*/
 void CPU8068::AAS() {
     if (((AL & 0x0F) > 9) || AF()) {
         AX -= 0x6;
