@@ -471,9 +471,27 @@ void CPU8068::mov_reg_rm(const uint8_t mod_rm, const uint8_t width) {
     }
 }
 
+/*
+
+Here mod 0b11 is not calculated, that is based upon instruction
+If the instruction is for reg8, then lower registers are used
+else whole 16-bit register is used
+
+Detail: https://en.wikipedia.org/wiki/ModR/M
+        16-bit mode
+
+R/M                       MOD
+           00           01[a]             10          11
+000     [BX+SI]     [BX+SI+disp8]   [BX+SI+disp16]  AL / AX
+001     [BX+DI]     [BX+DI+disp8]   [BX+DI+disp16]  CL / CX
+010     [BP+SI]     [BP+SI+disp8]   [BP+SI+disp16]  DL / DX
+011     [BP+DI]     [BP+DI+disp8]   [BP+DI+disp16]  BL / BX
+100     [SI]        [SI+disp8]      [SI+disp16]     AH / SP
+101     [DI]        [DI+disp8]      [DI+disp16]     CH / BP
+110     [disp16]    [BP+disp8]      [BP+disp16]     DH / SI
+111     [BX]        [BX+disp8]      [BX+disp16]     BH / DI 
+*/
 bool CPU8068::get_address_mode_rm(const uint8_t mode, const uint8_t r_m, uint16_t &address) {
-	// https://en.wikipedia.org/wiki/ModR/M
-	// 16-bit mode
     switch (r_m) {
         case 0b000: address = BX + SI; break;
         case 0b001: address = BX + DI; break;
