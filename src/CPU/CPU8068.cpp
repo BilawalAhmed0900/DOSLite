@@ -244,8 +244,8 @@ void CPU8068::execute() {
         cmp_rm_reg(mod_rm, is_16bit ? 16 : 8);
         break;
       }
-        // cmp r8  r/m8     (0x38)
-        // cmp r16 r/m16    (0x39)
+        // cmp r8  r/m8     (0x3A)
+        // cmp r16 r/m16    (0x3B)
       case 0x3A:
       case 0x3B: {
         const uint8_t mod_rm = mem8(CS, IP++);
