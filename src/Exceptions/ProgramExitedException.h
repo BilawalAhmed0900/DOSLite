@@ -6,14 +6,13 @@
 #define PROGRAMEXITEDEXCEPTION_H
 #include <exception>
 
-
 class ProgramExitedException : public std::exception {
-public:
-    explicit ProgramExitedException(int code);
-    virtual ~ProgramExitedException();
+ public:
+  explicit ProgramExitedException(int code);
+  virtual ~ProgramExitedException();
 
-public:
-    int code;
+ public:
+  int code;
 };
 
-#endif //PROGRAMEXITEDEXCEPTION_H
+#endif  // PROGRAMEXITEDEXCEPTION_H

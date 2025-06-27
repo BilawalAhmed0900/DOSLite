@@ -4,6 +4,5 @@
 
 #include "ProgramExitedException.h"
 
-ProgramExitedException::ProgramExitedException(const int code) : code(code) {
-}
+ProgramExitedException::ProgramExitedException(const int code) : code(code) {}
 ProgramExitedException::~ProgramExitedException() = default;

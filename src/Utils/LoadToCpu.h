@@ -5,16 +5,12 @@
 #ifndef LOADTOCPU_H
 #define LOADTOCPU_H
 
-
-#include "../ExecutableFiles/COM.h"
 #include "../CPU/CPU8068.h"
-
+#include "../ExecutableFiles/COM.h"
 
 class LoadToCPU {
-public:
-    static void load(CPU8068& cpu, const COM& com);
+ public:
+  static void load(CPU8068& cpu, const COM& com);
 };
 
-
-
-#endif //LOADTOCPU_H
+#endif  // LOADTOCPU_H

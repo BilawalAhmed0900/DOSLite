@@ -4,25 +4,29 @@
 
 #include "EnableCursorControl.h"
 
-EnableCursorControl::EnableCursorControl() {
+EnableCursorControl::EnableCursorControl()
 #ifdef _WIN32
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hOut == INVALID_HANDLE_VALUE) return;
+    : oldMode(0)
+#endif
+{
+#ifdef _WIN32
+  HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+  if (hOut == INVALID_HANDLE_VALUE) return;
 
-    DWORD dwMode = 0;
-    if (!GetConsoleMode(hOut, &dwMode)) return;
+  DWORD dwMode = 0;
+  if (!GetConsoleMode(hOut, &dwMode)) return;
 
-    oldMode = dwMode;
-    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    SetConsoleMode(hOut, dwMode);
+  oldMode = dwMode;
+  dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+  SetConsoleMode(hOut, dwMode);
 #endif
 }
 
 EnableCursorControl::~EnableCursorControl() {
 #ifdef _WIN32
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hOut == INVALID_HANDLE_VALUE) return;
+  HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+  if (hOut == INVALID_HANDLE_VALUE) return;
 
-    SetConsoleMode(hOut, oldMode);
+  SetConsoleMode(hOut, oldMode);
 #endif
 }

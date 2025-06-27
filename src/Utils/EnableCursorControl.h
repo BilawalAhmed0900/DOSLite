@@ -10,16 +10,14 @@
 #endif
 
 class EnableCursorControl {
-public:
-    EnableCursorControl();
-    ~EnableCursorControl();
+ public:
+  EnableCursorControl();
+  ~EnableCursorControl();
 
-private:
+ private:
 #ifdef _WIN32
-    DWORD oldMode;
+  DWORD oldMode;
 #endif
 };
 
-
-
-#endif //ENABLECURSORCONTROL_H
+#endif  // ENABLECURSORCONTROL_H
