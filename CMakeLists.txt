@@ -19,7 +19,7 @@ add_executable (x8086
         src/CPU/funcs/mov.cpp
         src/CPU/funcs/cmp.cpp
         src/CPU/funcs/flags.cpp
-        src/CPU/funcs/artithematics.cpp
+        src/CPU/funcs/arithematics.cpp
         src/CPU/funcs/utils.cpp
         src/CPU/funcs/multi_func_instrs.cpp
         src/ExecutableFiles/MZExe.cpp
