@@ -5,7 +5,9 @@
 #include "MZExe.h"
 
 #include <cstring>
-#include <filesystem>
+#include <exception>
+#include <fstream>
+#include <vector>
 
 #include "../Utils/logger.h"
 

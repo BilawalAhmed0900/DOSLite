@@ -4,6 +4,8 @@
 
 #include "CPU8068.h"
 
+#include <cctype>
+#include <cstdint>
 #include <iostream>
 
 #include "../Exceptions/ProgramExitedException.h"

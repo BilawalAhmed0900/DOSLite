@@ -6,7 +6,7 @@
 #define ENABLECURSORCONTROL_H
 
 #ifdef _WIN32
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 class EnableCursorControl {

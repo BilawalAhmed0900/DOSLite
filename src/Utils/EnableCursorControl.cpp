@@ -4,6 +4,13 @@
 
 #include "EnableCursorControl.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#include <consoleapi.h>
+#include <handleapi.h>
+#include <processenv.h>
+#endif
+
 EnableCursorControl::EnableCursorControl()
 #ifdef _WIN32
     : oldMode(0)

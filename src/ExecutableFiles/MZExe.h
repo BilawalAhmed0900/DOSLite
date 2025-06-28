@@ -6,7 +6,6 @@
 #define MZEXE_H
 
 #include <fstream>
-#include <memory>
 #include <optional>
 #include <vector>
 

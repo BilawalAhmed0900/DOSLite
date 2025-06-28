@@ -5,6 +5,8 @@
 #include "COM.h"
 
 #include <fstream>
+#include <optional>
+#include <string_view>
 
 std::optional<COM> COM::open(const std::string_view& path) {
   std::ifstream iff(path.data(), std::ios::binary);

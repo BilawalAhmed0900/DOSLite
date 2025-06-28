@@ -5,13 +5,17 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <cstdio>
 #include <fstream>
+#include <iostream>
+#include <new>
 #include <string>
 
 template <typename... Args>
 void mylog(const std::string& format, Args... args) {
   const size_t bufferNeeded =
-      std::snprintf(nullptr, 0, format.c_str(), args...) + 1;
+      static_cast<size_t>(std::snprintf(nullptr, 0, format.c_str(), args...)) +
+      1;
 
   char* buffer = new (std::nothrow) char[bufferNeeded];
   if (!buffer) {
