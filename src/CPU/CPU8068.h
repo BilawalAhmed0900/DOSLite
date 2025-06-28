@@ -20,6 +20,7 @@ class CPU8068 {
   uint8_t& mem8(uint16_t CS, uint16_t IP);
   uint16_t& mem16(uint16_t CS, uint16_t IP);
   uint16_t sign_extend(uint8_t val);
+  bool is_AF(uint16_t lhs, uint16_t rhs, uint32_t result);
 
   // For now, not implementing the interrupt table
   void interrupt(uint8_t num);
