@@ -39,6 +39,9 @@ class CPU8068 {
   void mov_rm_imm(uint8_t mod_rm, uint8_t width);
   void mov_reg_rm(uint8_t mod_rm, uint8_t width);
   void cmp_reg_rm(uint8_t mod_rm, uint8_t width);
+  void mov_rm_sreg(uint8_t mod_rm, uint8_t width);
+  void mov_sreg_rm(uint8_t mod_rm, uint8_t width);
+  void mov_es_di_ds_si(uint8_t width);
 
   void instr_80_81_82(uint8_t mod_rm, uint8_t width);
   void instr_83(uint8_t mod_rm);
@@ -87,9 +90,10 @@ class CPU8068 {
 
   static constexpr uint16_t CF_MASK = 1 << 0;
   static constexpr uint16_t PF_MASK = 1 << 2;
+  static constexpr uint16_t AF_MASK = 1 << 4;
   static constexpr uint16_t ZF_MASK = 1 << 6;
   static constexpr uint16_t SF_MASK = 1 << 7;
-  static constexpr uint16_t AF_MASK = 1 << 4;
+  static constexpr uint16_t DF_MASK = 1 << 10;
   static constexpr uint16_t OF_MASK = 1 << 11;
   uint16_t FLAGS;
 
@@ -97,12 +101,14 @@ class CPU8068 {
   void SetCF(uint8_t val);
   [[nodiscard]] uint8_t PF() const;
   void SetPF(uint8_t val);
+  [[nodiscard]] uint8_t AF() const;
+  void SetAF(uint8_t val);
   [[nodiscard]] uint8_t ZF() const;
   void SetZF(uint8_t val);
   [[nodiscard]] uint8_t SF() const;
   void SetSF(uint8_t val);
-  [[nodiscard]] uint8_t AF() const;
-  void SetAF(uint8_t val);
+  [[nodiscard]] uint8_t DF() const;
+  void SetDF(uint8_t val);
   [[nodiscard]] uint8_t OF() const;
   void SetOF(uint8_t val);
 

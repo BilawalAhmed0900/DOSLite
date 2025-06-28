@@ -58,6 +58,16 @@ void CPU8068::execute() {
         }
         break;
       }
+        // MOVS   m8  m8         (0xA4)
+        // MOVSB  m8  m8         (0xA4)
+        // MOVS   m16 m16        (0xA5)
+        // MOVSW  m16 m16        (0xA5)
+      case 0xA4:
+      case 0xA5: {
+        const bool is_16bit = (opcode == 0xA5);
+        mov_es_di_ds_si(is_16bit ? 16 : 8);
+        break;
+      }
         // B0 + r
         // mov r8, imm8
       case 0xB0:
@@ -103,6 +113,20 @@ void CPU8068::execute() {
 
         const bool is_16bit = (opcode == 0x8B);
         mov_reg_rm(mod_rm, is_16bit ? 16 : 8);
+        break;
+      }
+        // MOV m16   Sreg
+        // MOV r16   Sreg
+      case 0x8C: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+        mov_rm_sreg(mod_rm, 16);
+        break;
+      }
+        // MOV Sreg m16
+        // MOV Sreg r16
+      case 0x8E: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+        mov_sreg_rm(mod_rm, 16);
         break;
       }
         // mov r/m8     imm8        (0xC6)
@@ -199,10 +223,100 @@ void CPU8068::execute() {
         break;
       }
         // JMP
-        // jmp e8
-      case 0xEB: {
+        // JZ e8
+      case 0x74: {
         const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
-        IP += offset;
+        if (ZF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JNZ e8
+      case 0x75: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (!ZF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JBE e8
+      case 0x76: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (CF() || ZF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JNBE e8
+      case 0x77: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (!CF() && !ZF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JS e8
+      case 0x78: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (SF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JNS e8
+      case 0x79: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (!SF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JP e8
+      case 0x7A: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (PF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JNP e8
+      case 0x7B: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (!PF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JL e8
+      case 0x7C: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (SF() != OF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JNL e8
+      case 0x7D: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (SF() == OF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JLE e8
+      case 0x7E: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (ZF() && (SF() != OF())) {
+          IP += offset;
+        }
+        break;
+      }
+        // JNLE e8
+      case 0x7F: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (!ZF() && (SF() == OF())) {
+          IP += offset;
+        }
         break;
       }
         // jmp e16
@@ -210,6 +324,96 @@ void CPU8068::execute() {
         const int16_t offset = static_cast<int16_t>(mem16(CS, IP));
         IP += 2;
         IP += offset;
+        break;
+      }
+        // jmpf ptr16:16/32
+      case 0xEA: {
+        const uint16_t new_IP = mem16(CS, IP);
+        IP += 2;
+
+        const uint16_t new_CS = mem16(CS, IP);
+        IP += 2;
+
+        IP = new_IP;
+        CS = new_CS;
+        break;
+      }
+        // jmp e8
+      case 0xEB: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        IP += offset;
+        break;
+      }
+        // loopnz eAX
+      case 0xE0: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (((--CX) != 0) && !ZF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // loopz eAX
+      case 0xE1: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (((--CX) != 0) && ZF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // loop eAX
+      case 0xE2: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if ((--CX) != 0) {
+          IP += offset;
+        }
+        break;
+      }
+        // loop eAX
+      case 0xE3: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (CX == 0) {
+          IP += offset;
+        }
+        break;
+      }
+        // callf ptr16:16/32
+      case 0x9A: {
+        const uint16_t new_IP = mem16(CS, IP);
+        IP += 2;
+
+        const uint16_t new_CS = mem16(CS, IP);
+        IP += 2;
+
+        SP -= 2;
+        mem16(SS, SP) = CS;
+        SP -= 2;
+        mem16(SS, SP) = IP;
+
+        IP = new_IP;
+        CS = new_CS;
+        break;
+      }
+        // RET
+        // retf imm16
+      case 0xCA: {
+        const uint16_t val = mem16(CS, IP);
+        IP += 2;
+
+        IP = mem16(SS, SP);
+        SP += 2;
+        CS = mem16(SS, SP);
+        SP += 2;
+
+        SP += val;
+        break;
+      }
+        // retf
+      case 0xCB: {
+        IP = mem16(SS, SP);
+        SP += 2;
+        CS = mem16(SS, SP);
+        SP += 2;
+
         break;
       }
         // DAA
@@ -309,23 +513,6 @@ void CPU8068::execute() {
         instr_83(mod_rm);
         break;
       }
-        // JE
-        // je rel8
-      case 0x74: {
-        int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
-        if (ZF()) {
-          IP += offset;
-        }
-        break;
-      }
-        // jne rel8
-      case 0x75: {
-        int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
-        if (!ZF()) {
-          IP += offset;
-        }
-        break;
-      }
         // CLC
       case 0xF8: {
         SetCF(0);
@@ -334,6 +521,16 @@ void CPU8068::execute() {
         // STC
       case 0xF9: {
         SetCF(1);
+        break;
+      }
+        // CLD
+      case 0xFC: {
+        SetDF(0);
+        break;
+      }
+        // STD
+      case 0xFD: {
+        SetDF(1);
         break;
       }
       default:

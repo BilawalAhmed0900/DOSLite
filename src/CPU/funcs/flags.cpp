@@ -133,6 +133,13 @@ void CPU8068::SetPF(const uint8_t val) {
   FLAGS |= (val ? PF_MASK : 0);
 }
 
+uint8_t CPU8068::AF() const { return (FLAGS >> 4) & 0x1; }
+
+void CPU8068::SetAF(const uint8_t val) {
+  FLAGS &= ~AF_MASK;
+  FLAGS |= (val ? AF_MASK : 0);
+}
+
 uint8_t CPU8068::ZF() const { return (FLAGS >> 6) & 0x1; }
 
 void CPU8068::SetZF(const uint8_t val) {
@@ -147,11 +154,11 @@ void CPU8068::SetSF(const uint8_t val) {
   FLAGS |= (val ? SF_MASK : 0);
 }
 
-uint8_t CPU8068::AF() const { return (FLAGS >> 4) & 0x1; }
+uint8_t CPU8068::DF() const { return (FLAGS >> 10) & 0x1; }
 
-void CPU8068::SetAF(const uint8_t val) {
-  FLAGS &= ~AF_MASK;
-  FLAGS |= (val ? AF_MASK : 0);
+void CPU8068::SetDF(uint8_t val) {
+  FLAGS &= ~DF_MASK;
+  FLAGS |= (val ? DF_MASK : 0);
 }
 
 uint8_t CPU8068::OF() const { return (FLAGS >> 11) & 0x1; }

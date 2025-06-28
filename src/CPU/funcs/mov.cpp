@@ -1,8 +1,7 @@
-#include "../CPU8068.h"
-
 #include <cstdint>
 
 #include "../../Utils/logger.h"
+#include "../CPU8068.h"
 
 void CPU8068::mov_rm_reg(const uint8_t mod_rm, const uint8_t width) {
   if (width != 8 && width != 16) {
@@ -91,5 +90,129 @@ void CPU8068::mov_reg_rm(const uint8_t mod_rm, const uint8_t width) {
     }
   } else {
     mylog("Unsupported 0x8A, 0x8B");
+  }
+}
+
+void CPU8068::mov_rm_sreg(uint8_t mod_rm, uint8_t width) {
+  if (width != 16) {
+    mylog("Unsupported width in mov_rm_sreg");
+    return;
+  }
+
+  const uint8_t mode = ((mod_rm >> 6) & 0b011);
+  const uint8_t reg = ((mod_rm >> 3) & 0b111);
+  const uint8_t r_m = ((mod_rm >> 0) & 0b111);
+
+  /*
+    only this combination with CS is allowed
+    mov ax, cs
+  */
+  if (reg == 0b001) {
+    if (mode != 0b11) {
+      mylog("Unsupported reg in mov_rm_sreg");
+      return;
+    }
+
+    if (r_m != 0b000) {
+      mylog("Unsupported r_m in mov_rm_sreg");
+      return;
+    }
+
+    *reg16[r_m] = CS;
+    return;
+  }
+
+  if (reg != 0b000 && reg != 0b010 && reg != 0b011) {
+    mylog("Unsupported reg in mov_rm_sreg");
+    return;
+  }
+
+  const uint16_t segment = (reg == 0b000)   ? ES
+                           : (reg == 0b010) ? SS
+                           : (reg == 0b011) ? DS
+                                            : static_cast<uint16_t>(-1);
+  if (segment == static_cast<uint16_t>(-1)) {
+    mylog("Unsupported reg in mov_rm_sreg");
+    return;
+  }
+
+  if (mode == 0b11) {
+    *reg16[r_m] = segment;
+  } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+    uint16_t address;
+    if (!get_address_mode_rm(mode, r_m, address)) {
+      mylog("Unsupported r/m bit");
+      return;
+    }
+
+    mem16(DS, address) = segment;
+  } else {
+    mylog("Unsupported 0x8C");
+  }
+}
+
+void CPU8068::mov_sreg_rm(uint8_t mod_rm, uint8_t width) {
+  if (width != 16) {
+    mylog("Unsupported width in mov_sreg_rm");
+    return;
+  }
+
+  const uint8_t mode = ((mod_rm >> 6) & 0b011);
+  const uint8_t reg = ((mod_rm >> 3) & 0b111);
+  const uint8_t r_m = ((mod_rm >> 0) & 0b111);
+
+  if (reg != 0b000 && reg != 0b010 && reg != 0b011) {
+    mylog("Unsupported reg in mov_sreg_rm");
+    return;
+  }
+
+  uint16_t *segment = (reg == 0b000)   ? &ES
+                      : (reg == 0b010) ? &SS
+                      : (reg == 0b011) ? &DS
+                                       : nullptr;
+  if (segment == nullptr) {
+    mylog("Unsupported reg in mov_sreg_rm");
+    return;
+  }
+
+  if (mode == 0b11) {
+    *segment = *reg16[r_m];
+  } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+    uint16_t address;
+    if (!get_address_mode_rm(mode, r_m, address)) {
+      mylog("Unsupported r/m bit");
+      return;
+    }
+
+    *segment = mem16(DS, address);
+  } else {
+    mylog("Unsupported 0x8E");
+  }
+}
+
+void CPU8068::mov_es_di_ds_si(uint8_t width) {
+  if (width != 8 && width != 16) {
+    mylog("Unsupported width in mov_es_di_ds_si");
+    return;
+  }
+
+  if (width == 16) {
+    mem16(ES, DI) = mem16(DS, SI);
+    if (DF()) {
+      DI -= 2;
+      SI -= 2;
+    } else {
+      DI += 2;
+      SI += 2;
+    }
+  } else {
+    mem8(ES, DI) = mem8(DS, SI);
+    if (DF()) {
+      DI -= 1;
+      SI -= 1;
+    } else {
+      DI += 1;
+      SI += 1;
+    }
   }
 }
