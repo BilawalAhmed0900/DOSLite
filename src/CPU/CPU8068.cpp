@@ -147,6 +147,26 @@ void CPU8068::execute() {
         break;
       }
         // ADD
+        // ADD  r/m8  r8
+        // ADD  r/m16 r16
+      case 0x00:
+      case 0x01: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x01);
+        add_rm_reg(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // ADD  r8  r/m8
+        // ADD  r16 r/m16
+      case 0x02:
+      case 0x03: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x03);
+        add_reg_rm(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
         // add AL imm8
       case 0x04: {
         const uint8_t rhs = mem8(CS, IP++);
@@ -166,6 +186,26 @@ void CPU8068::execute() {
         break;
       }
         // SUB
+        // SUB  r/m8  r8
+        // SUB  r/m16 r16
+      case 0x28:
+      case 0x29: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x29);
+        sub_rm_reg(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // SUB  r8  r/m8
+        // SUB  r16 r/m16
+      case 0x2A:
+      case 0x2B: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x2B);
+        sub_reg_rm(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
         // sub AL imm8
       case 0x2C: {
         const uint8_t rhs = mem8(CS, IP++);

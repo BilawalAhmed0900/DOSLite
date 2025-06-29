@@ -22,6 +22,8 @@ add_executable (x8086
         src/CPU/funcs/arithematics.cpp
         src/CPU/funcs/utils.cpp
         src/CPU/funcs/multi_func_instrs.cpp
+        src/CPU/funcs/add.cpp
+        src/CPU/funcs/sub.cpp
         src/ExecutableFiles/MZExe.cpp
         src/ExecutableFiles/MZExe.h
         src/Utils/logger.h
