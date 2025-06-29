@@ -178,7 +178,7 @@ void CPU8068::instr_80_81_82(const uint8_t mod_rm, const uint8_t width) {
       default:
         mylog("Unsupported 0x80, 0x81, 0x82");
     }
-  } else {
+  } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
     uint16_t address;
     if (!get_address_mode_rm(mode, r_m, address)) {
       mylog("Unsupported r/m bit");
@@ -442,7 +442,7 @@ void CPU8068::instr_83(const uint8_t mod_rm) {
       default:
         mylog("Unsupported 0x83");
     }
-  } else {
+  } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
     uint16_t address;
     if (!get_address_mode_rm(mode, r_m, address)) {
       mylog("Unsupported r/m bit");
