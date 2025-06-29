@@ -384,7 +384,7 @@ void CPU8068::execute() {
         IP += offset;
         break;
       }
-        // loopnz eAX
+        // loopnz eCX
       case 0xE0: {
         const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
         if (((--CX) != 0) && !ZF()) {
@@ -392,7 +392,7 @@ void CPU8068::execute() {
         }
         break;
       }
-        // loopz eAX
+        // loopz eCX
       case 0xE1: {
         const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
         if (((--CX) != 0) && ZF()) {
@@ -400,7 +400,7 @@ void CPU8068::execute() {
         }
         break;
       }
-        // loop eAX
+        // loop eCX
       case 0xE2: {
         const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
         if ((--CX) != 0) {
@@ -408,7 +408,7 @@ void CPU8068::execute() {
         }
         break;
       }
-        // loop eAX
+        // loop eCX
       case 0xE3: {
         const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
         if (CX == 0) {
