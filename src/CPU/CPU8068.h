@@ -39,6 +39,10 @@ class CPU8068 {
   void add_reg_rm(uint8_t mod_rm, uint8_t width);
   void sub_reg_rm(uint8_t mod_rm, uint8_t width);
 
+  void test_rm_reg(uint8_t mod_rm, uint8_t width);
+
+  void xchg_reg_rm(uint8_t mod_rm, uint8_t width);
+
   void mov_rm_reg(uint8_t mod_rm, uint8_t width);
   void cmp_rm_reg(uint8_t mod_rm, uint8_t width);
   void mov_rm_imm(uint8_t mod_rm, uint8_t width);

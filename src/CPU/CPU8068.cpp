@@ -476,10 +476,6 @@ void CPU8068::execute() {
         AAS();
         break;
       }
-        // NOP
-      case 0x90: {
-        break;
-      }
         // CMP
         // cmp r/m8  r8      (0x38)
         // cmp r/m16 r16     (0x39)
@@ -551,6 +547,47 @@ void CPU8068::execute() {
       case 0x83: /* Sign extended */ {
         const uint8_t mod_rm = mem8(CS, IP++);
         instr_83(mod_rm);
+        break;
+      }
+        // TEST
+        // test r/m8  r8      (0x84)
+        // test r/m16 r16     (0x85)
+      case 0x84:
+      case 0x85: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+        const bool is_16bit = (opcode == 0x85);
+        test_rm_reg(mod_rm, (is_16bit) ? 16 : 8);
+
+        break;
+      }
+        // XCHG
+        // xchg r8   r/m8     (0x86)
+        // xchg r16  r/m16    (0x87)
+      case 0x86:
+      case 0x87: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+        const bool is_16bit = (opcode == 0x87);
+        xchg_reg_rm(mod_rm, (is_16bit) ? 16 : 8);
+
+        break;
+      }
+        // NOP
+        // XCHG AX, AX
+      case 0x90: {
+        break;
+      }
+        // 0x90+r XCHG AX, r16
+      case 0x91:
+      case 0x92:
+      case 0x93:
+      case 0x94:
+      case 0x95:
+      case 0x96:
+      case 0x97: {
+        const uint16_t temp = *reg16[opcode - 0x90];
+        uint16_t& rhs = *reg16[opcode - 0x90];
+        rhs = AX;
+        AX = temp;
         break;
       }
         // CLC
