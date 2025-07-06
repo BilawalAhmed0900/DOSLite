@@ -590,6 +590,15 @@ void CPU8068::execute() {
         AX = temp;
         break;
       }
+               // SHIFTS
+      case 0xD0:
+      case 0xD1: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+        const bool is_16bit = (opcode == 0xD1);
+        shift_reg_rm(mod_rm, (is_16bit) ? 16 : 8);
+
+        break;
+      }
         // CLC
       case 0xF8: {
         SetCF(0);

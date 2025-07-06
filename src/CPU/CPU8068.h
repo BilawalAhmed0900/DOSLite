@@ -54,6 +54,7 @@ class CPU8068 {
 
   void instr_80_81_82(uint8_t mod_rm, uint8_t width);
   void instr_83(uint8_t mod_rm);
+  void instr_d0_d1(uint8_t mod_rm, uint8_t width);
 
   bool get_address_mode_rm(uint8_t mode, uint8_t r_m, uint16_t& address);
 
