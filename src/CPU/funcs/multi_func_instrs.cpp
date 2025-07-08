@@ -577,7 +577,8 @@ void CPU8068::instr_83(const uint8_t mod_rm) {
   shifts. For the SHR instruction, the OF flag is set to the most-significant
   bit of the original operand.
 */
-void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t count) {
+void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width,
+                                      uint8_t count) {
   if (width != 8 && width != 16) {
     mylog("Unsupported width in instr_d2_d3_c0_c1");
     return;
@@ -587,8 +588,8 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t cou
     The 8086 does not mask the rotation count. However, all other IA-32
     processors (starting with the Intel 286 processor) do mask the rotation
     count to 5 bits, resulting in a maximum count of 31. This masking is done in
-    all operating modes (intimesuding the virtual-8086 mode) to reduce the maximum
-    execution time of the instructions.
+    all operating modes (intimesuding the virtual-8086 mode) to reduce the
+    maximum execution time of the instructions.
   */
   count &= 0b11111;
 
@@ -709,7 +710,9 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t cou
       break;
     }
       // SHL
-    case 0b100: {
+      // SAL
+    case 0b100:
+    case 0b110: {
       if (width == 8) {
         uint8_t last_bit_rotated = 0;
         uint32_t val = SHL(*reg8[r_m], width, count, last_bit_rotated);
@@ -722,9 +725,9 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t cou
               (val >> static_cast<uint32_t>(width - 1)) & 0x1;
           SetOF(last_bit_rotated ^ new_msb);
         } else {
-          SetOF(0); // undefined actually, so currently clearing
+          SetOF(0);  // undefined actually, so currently clearing
         }
-        
+
         *reg8[r_m] = static_cast<uint8_t>(val);
       } else if (width == 16) {
         uint8_t last_bit_rotated = 0;
@@ -756,11 +759,10 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t cou
 
         if (count == 1) {
           SetOF(old_msb);
+        } else {
+          SetOF(0);  // undefined actually, so currently clearing
         }
-        else {
-          SetOF(0); // undefined actually, so currently clearing
-        }
-        
+
         *reg8[r_m] = static_cast<uint8_t>(val);
       } else if (width == 16) {
         uint8_t last_bit_rotated = 0;
@@ -773,13 +775,13 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t cou
         if (count == 1) {
           SetOF(old_msb);
         } else {
-          SetOF(0); // undefined actually, so currently clearing
+          SetOF(0);  // undefined actually, so currently clearing
         }
         *reg16[r_m] = static_cast<uint16_t>(val);
       }
       break;
     }
-    case 0b110: {
+    case 0b111: {
       if (width == 8) {
         uint8_t last_bit_rotated = 0;
         uint32_t val = SAR(*reg8[r_m], width, count, last_bit_rotated);
@@ -789,9 +791,9 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t cou
         if (count == 1) {
           SetOF(0);
         } else {
-          SetOF(0); // undefined actually, so currently clearing
+          SetOF(0);  // undefined actually, so currently clearing
         }
-        
+
         *reg8[r_m] = static_cast<uint8_t>(val);
       } else if (width == 16) {
         uint8_t last_bit_rotated = 0;
@@ -802,14 +804,10 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t cou
         if (count == 1) {
           SetOF(0);
         } else {
-          SetOF(0); // undefined actually, so currently clearing
+          SetOF(0);  // undefined actually, so currently clearing
         }
         *reg16[r_m] = static_cast<uint16_t>(val);
       }
-      break;
-    }
-    case 0b111: {
-      mylog("Invalid value of reg in r/m byte in 0xD0 0xD1 0xC0 0xC1");
       break;
     }
     default:
