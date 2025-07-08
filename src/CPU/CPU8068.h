@@ -21,6 +21,20 @@ class CPU8068 {
   uint16_t& mem16(uint16_t CS, uint16_t IP);
   uint16_t sign_extend(uint8_t val);
   bool is_AF(uint16_t lhs, uint16_t rhs, uint32_t result);
+  uint32_t ROL(uint32_t val, uint8_t width, uint8_t count,
+               uint8_t& last_bit_rotated);
+  uint32_t ROR(uint32_t val, uint8_t width, uint8_t count,
+               uint8_t& last_bit_rotated);
+  uint32_t RCL(uint32_t val, uint8_t width, uint8_t count,
+               uint8_t& last_bit_rotated);
+  uint32_t RCR(uint32_t val, uint8_t width, uint8_t count,
+               uint8_t& last_bit_rotated);
+  uint32_t SHL(uint32_t val, uint8_t width, uint8_t count,
+               uint8_t& last_bit_rotated);
+  uint32_t SHR(uint32_t val, uint8_t width, uint8_t count,
+               uint8_t& last_bit_rotated);
+  uint32_t SAR(uint32_t val, uint8_t width, uint8_t count,
+               uint8_t& last_bit_rotated);
 
   // For now, not implementing the interrupt table
   void interrupt(uint8_t num);
@@ -54,7 +68,7 @@ class CPU8068 {
 
   void instr_80_81_82(uint8_t mod_rm, uint8_t width);
   void instr_83(uint8_t mod_rm);
-  void instr_d0_d1(uint8_t mod_rm, uint8_t width);
+  void instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t count);
 
   bool get_address_mode_rm(uint8_t mode, uint8_t r_m, uint16_t& address);
 

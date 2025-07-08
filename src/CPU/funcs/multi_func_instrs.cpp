@@ -537,9 +537,63 @@ void CPU8068::instr_83(const uint8_t mod_rm) {
   }
 }
 
-void CPU8068::instr_d0_d1(uint8_t mod_rm, uint8_t width) {
+/*
+  All of this copied from Intel specs to clarify how this instructions work
+*/
+/*
+  The ROL instruction rotates the bits in the operand to the left (toward more
+  significant bit locations). The ROR instruction rotates the operand right
+  (toward less significant bit locations).
+
+  The RCL instruction rotates the bits in the operand to the left, through the
+  CF flag. This instruction treats the CF flag as a one-bit extension on the
+  upper end of the operand. Each bit that exits from the most significant bit
+  location of the operand moves into the CF flag. At the same time, the bit in
+  the CF flag enters the least significant bit location of the operand.
+
+  The RCR instruction rotates the bits in the operand to the right through the
+  CF flag.
+
+  For all the rotate instructions, the CF flag always contains the value of the
+  last bit rotated out of the operand, even if the instruction does not use the
+  CF flag as an extension of the operand. The value of this flag can then be
+  tested by a conditional jump instruction (JC or JNC).
+
+  For the ROL and ROR instructions, the original value of the CF flag is not a
+  part of the result, but the CF flag receives a copy of the bit that was
+  shifted from one end to the other.
+
+  The OF flag is defined only for the 1-bit rotates; it is undefined in all
+  other cases (except RCL and RCR instructions only: a zero-bit rotate does
+  nothing, that is affects no flags). For left rotates, the OF flag is set to
+  the exclusive OR of the CF bit (after the rotate) and the most-significant bit
+  of the result. For right rotates, the OF flag is set to the exclusive OR of
+  the two most-significant bits of the result.
+
+  The OF flag is affected only on 1-bit shifts. For left shifts, the OF flag is
+  set to 0 if the most-significant bit of the result is the same as the CF flag
+  (that is, the top two bits of the original operand were the same); otherwise,
+  it is set to 1. For the SAR instruction, the OF flag is cleared for all 1-bit
+  shifts. For the SHR instruction, the OF flag is set to the most-significant
+  bit of the original operand.
+*/
+void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t count) {
   if (width != 8 && width != 16) {
-    mylog("Unsupported width in instr_d0_d1");
+    mylog("Unsupported width in instr_d2_d3_c0_c1");
+    return;
+  }
+
+  /*
+    The 8086 does not mask the rotation count. However, all other IA-32
+    processors (starting with the Intel 286 processor) do mask the rotation
+    count to 5 bits, resulting in a maximum count of 31. This masking is done in
+    all operating modes (intimesuding the virtual-8086 mode) to reduce the maximum
+    execution time of the instructions.
+  */
+  count &= 0b11111;
+
+  if (count == 0) {
+    mylog("times == 0 in instr_d2_d3_c0_c1");
     return;
   }
 
@@ -550,43 +604,25 @@ void CPU8068::instr_d0_d1(uint8_t mod_rm, uint8_t width) {
   switch (reg) {
     // ROL
     case 0b000: {
-      /*
-        The rotate left (ROL) and rotate through carry left (RCL) instructions
-        shift all the bits toward more-significant bit positions, except for the
-        most-significant bit, which is rotated to the least-significant bit
-        location. The rotate right (ROR) and rotate through carry right (RCR)
-        instructions shift all the bits toward less significant bit positions,
-        except for the least-significant bit, which is rotated to the
-        most-significant bit location.
-
-        The OF flag is defined only for the 1-bit rotates; it is undefined in
-        all other cases (except RCL and RCR instructions only: a zero-bit rotate
-        does nothing, that is affects no flags). For left rotates, the OF flag
-        is set to the exclusive OR of the CF bit (after the rotate) and the
-        most-significant bit of the result. For right rotates, the OF flag is
-        set to the exclusive OR of the two most-significant bits of the result.
-      */
       if (width == 8) {
-        uint16_t val = static_cast<uint16_t>(*reg8[r_m]);
-
-        const uint8_t old_msb = (val & 0b1000'0000) ? 1 : 0;
-        val <<= 1;
-        const uint8_t new_msb = (val & 0b1000'0000) ? 1 : 0;
-        val |= old_msb;
-
-        SetCF(old_msb);
-        SetOF(old_msb ^ new_msb);
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = ROL(*reg8[r_m], width, count, last_bit_rotated);
+        SetCF(last_bit_rotated);
+        if (count == 1) {
+          const uint8_t new_msb =
+              (val >> static_cast<uint32_t>(width - 1)) & 0x1;
+          SetOF(last_bit_rotated ^ new_msb);
+        }
         *reg8[r_m] = static_cast<uint8_t>(val);
       } else if (width == 16) {
-        uint32_t val = static_cast<uint32_t>(*reg16[r_m]);
-
-        const uint8_t old_msb = (val & 0b1000'0000'0000'0000) ? 1 : 0;
-        val <<= 1;
-        const uint8_t new_msb = (val & 0b1000'0000'0000'0000) ? 1 : 0;
-        val |= old_msb;
-
-        SetCF(old_msb);
-        SetOF(old_msb ^ new_msb);
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = ROL(*reg16[r_m], width, count, last_bit_rotated);
+        SetCF(last_bit_rotated);
+        if (count == 1) {
+          const uint8_t new_msb =
+              (val >> static_cast<uint32_t>(width - 1)) & 0x1;
+          SetOF(last_bit_rotated ^ new_msb);
+        }
         *reg16[r_m] = static_cast<uint16_t>(val);
       }
       break;
@@ -594,105 +630,115 @@ void CPU8068::instr_d0_d1(uint8_t mod_rm, uint8_t width) {
       // ROR
     case 0b001: {
       if (width == 8) {
-        uint8_t val = *reg8[r_m];
-
-        const uint8_t old_lsb = val & 0x1;
-        val >>= 1;
-        val |= ((old_lsb) ? 0b1000'0000 : 0);
-
-        SetCF(old_lsb);
-        SetOF(((val >> 7) & 0x1) ^ ((val >> 6) & 0x1));
-        *reg8[r_m] = val;
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = ROR(*reg8[r_m], width, count, last_bit_rotated);
+        SetCF(last_bit_rotated);
+        if (count == 1) {
+          SetOF(((val >> (width - 1)) & 0x1) ^ ((val >> (width - 2)) & 0x1));
+        }
+        *reg8[r_m] = static_cast<uint8_t>(val);
       } else if (width == 16) {
-        uint16_t val = *reg16[r_m];
-
-        const uint8_t old_lsb = val & 0x1;
-        val >>= 1;
-        val |= ((old_lsb) ? 0b1000'0000'0000'0000 : 0);
-
-        SetCF(old_lsb);
-        SetOF(((val >> 15) & 0x1) ^ ((val >> 14) & 0x1));
-        *reg16[r_m] = val;
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = ROR(*reg16[r_m], width, count, last_bit_rotated);
+        SetCF(last_bit_rotated);
+        if (count == 1) {
+          SetOF(((val >> (width - 1)) & 0x1) ^ ((val >> (width - 2)) & 0x1));
+        }
+        *reg16[r_m] = static_cast<uint16_t>(val);
       }
       break;
     }
       // RCL
     case 0b010: {
       if (width == 8) {
-        uint8_t val = *reg8[r_m];
-        const uint8_t cf = CF();
-        const uint8_t old_msb = (val & 0b1000'0000) ? 1 : 0;
-        val = (val << 1) | (cf ? 1 : 0);
-        const uint8_t new_msb = (val & 0b1000'0000) ? 1 : 0;
-
-        SetCF(old_msb);
-        SetOF(old_msb ^ new_msb);
-        *reg8[r_m] = val;
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = RCL(*reg8[r_m], width, count, last_bit_rotated);
+        SetCF(last_bit_rotated);
+        SetOF(last_bit_rotated ^ ((val >> (width - 1)) & 0x1));
+        *reg8[r_m] = static_cast<uint8_t>(val);
       } else if (width == 16) {
-        uint16_t val = *reg16[r_m];
-        const uint8_t cf = CF();
-        const uint8_t old_msb = (val & 0b1000'0000'0000'0000) ? 1 : 0;
-        val = (val << 1) | (cf ? 1 : 0);
-        const uint8_t new_msb = (val & 0b1000'0000'0000'0000) ? 1 : 0;
-
-        SetCF(old_msb);
-        SetOF(old_msb ^ new_msb);
-        *reg16[r_m] = val;
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = RCL(*reg16[r_m], width, count, last_bit_rotated);
+        SetCF(last_bit_rotated);
+        SetOF(last_bit_rotated ^ ((val >> (width - 1)) & 0x1));
+        *reg16[r_m] = static_cast<uint16_t>(val);
       }
       break;
     }
       // RCR
     case 0b011: {
       if (width == 8) {
-        uint8_t val = *reg8[r_m];
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = RCR(*reg8[r_m], width, count, last_bit_rotated);
+        /*
+          Since CF is part of this operation,
+          the last_bit_rotated is actually
+          already in the CF, just setting again
+          for timesarity
+        */
+        SetCF(last_bit_rotated);
 
-        const uint8_t old_lsb = val & 0x1;
-        val >>= 1;
-        val |= (CF() ? 0b1000'0000 : 0);
-        SetCF(old_lsb);
-
-        SetOF(((val >> 7) & 0x1) ^ ((val >> 6) & 0x1));
-        *reg8[r_m] = val;
+        /*
+          It is same as the ROR above
+          but the most 2 significant bit
+          intimesudes the CF which is last_bit_rotated
+          here
+        */
+        SetOF(last_bit_rotated ^ ((val >> (width - 1)) & 0x1));
+        *reg8[r_m] = static_cast<uint8_t>(val);
       } else if (width == 16) {
-        uint16_t val = *reg16[r_m];
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = RCR(*reg16[r_m], width, count, last_bit_rotated);
+        /*
+          Since CF is part of this operation,
+          the last_bit_rotated is actually
+          already in the CF, just setting again
+          for timesarity
+        */
+        SetCF(last_bit_rotated);
 
-        const uint8_t old_lsb = val & 0x1;
-        val >>= 1;
-        val |= (CF() ? 0b1000'0000'0000'0000 : 0);
-        SetCF(old_lsb);
-
-        SetOF(((val >> 15) & 0x1) ^ ((val >> 14) & 0x1));
-        *reg16[r_m] = val;
+        /*
+          It is same as the ROR above
+          but the most 2 significant bit
+          intimesudes the CF which is last_bit_rotated
+          here
+        */
+        SetOF(last_bit_rotated ^ ((val >> (width - 1)) & 0x1));
+        *reg16[r_m] = static_cast<uint16_t>(val);
       }
       break;
     }
       // SHL
     case 0b100: {
       if (width == 8) {
-        uint16_t val = static_cast<uint16_t>(*reg8[r_m]);
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = SHL(*reg8[r_m], width, count, last_bit_rotated);
 
-        const uint8_t old_msb = (val & 0b1000'0000) ? 1 : 0;
-        val <<= 1;
-        const uint8_t new_msb = (val & 0b1000'0000) ? 1 : 0;
-
-        // since this also set CF based upon latest result
-        // but SHL has its own requirement
         set_flags_logical(val, width);
-        SetCF(old_msb);
-        SetOF(old_msb ^ new_msb);
+        SetCF(last_bit_rotated);
+
+        if (count == 1) {
+          const uint8_t new_msb =
+              (val >> static_cast<uint32_t>(width - 1)) & 0x1;
+          SetOF(last_bit_rotated ^ new_msb);
+        } else {
+          SetOF(0); // undefined actually, so currently clearing
+        }
+        
         *reg8[r_m] = static_cast<uint8_t>(val);
       } else if (width == 16) {
-        uint32_t val = static_cast<uint32_t>(*reg16[r_m]);
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = SHL(*reg16[r_m], width, count, last_bit_rotated);
 
-        const uint8_t old_msb = (val & 0b1000'0000'0000'0000) ? 1 : 0;
-        val <<= 1;
-        const uint8_t new_msb = (val & 0b1000'0000'0000'0000) ? 1 : 0;
-
-        // since this also set CF based upon latest result
-        // but SHL has its own requirement
         set_flags_logical(val, width);
-        SetCF(old_msb);
-        SetOF(old_msb ^ new_msb);
+        SetCF(last_bit_rotated);
+        if (count == 1) {
+          const uint8_t new_msb =
+              (val >> static_cast<uint32_t>(width - 1)) & 0x1;
+          SetOF(last_bit_rotated ^ new_msb);
+        } else {
+          SetOF(0);  // undefined actually, so currently clearing
+        }
         *reg16[r_m] = static_cast<uint16_t>(val);
       }
       break;
@@ -700,38 +746,73 @@ void CPU8068::instr_d0_d1(uint8_t mod_rm, uint8_t width) {
       // SHR
     case 0b101: {
       if (width == 8) {
-        uint8_t val = *reg8[r_m];
+        uint8_t last_bit_rotated = 0;
+        const uint8_t old_msb =
+            (*reg8[r_m] >> static_cast<uint32_t>(width - 1)) & 0x1;
+        uint32_t val = SHR(*reg8[r_m], width, count, last_bit_rotated);
 
-        const uint8_t old_lsb = val & 0x1;
-        val >>= 1;
-
-        // since this also set CF based upon latest result
-        // but SHR has its own requirement
         set_flags_logical(val, width);
-        SetCF(old_lsb);
-        SetOF(((val >> 7) & 0x1) ^ ((val >> 6) & 0x1));
-        *reg8[r_m] = val;
+        SetCF(last_bit_rotated);
+
+        if (count == 1) {
+          SetOF(old_msb);
+        }
+        else {
+          SetOF(0); // undefined actually, so currently clearing
+        }
+        
+        *reg8[r_m] = static_cast<uint8_t>(val);
       } else if (width == 16) {
-        uint16_t val = *reg16[r_m];
+        uint8_t last_bit_rotated = 0;
+        const uint8_t old_msb =
+            (*reg16[r_m] >> static_cast<uint32_t>(width - 1)) & 0x1;
+        uint32_t val = SHR(*reg16[r_m], width, count, last_bit_rotated);
 
-        const uint8_t old_lsb = val & 0x1;
-        val >>= 1;
-
-        // since this also set CF based upon latest result
-        // but SHR has its own requirement
         set_flags_logical(val, width);
-        SetCF(old_lsb);
-        SetOF(((val >> 15) & 0x1) ^ ((val >> 14) & 0x1));
-        *reg16[r_m] = val;
+        SetCF(last_bit_rotated);
+        if (count == 1) {
+          SetOF(old_msb);
+        } else {
+          SetOF(0); // undefined actually, so currently clearing
+        }
+        *reg16[r_m] = static_cast<uint16_t>(val);
       }
       break;
     }
-    case 0b110:
+    case 0b110: {
+      if (width == 8) {
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = SAR(*reg8[r_m], width, count, last_bit_rotated);
+
+        set_flags_logical(val, width);
+        SetCF(last_bit_rotated);
+        if (count == 1) {
+          SetOF(0);
+        } else {
+          SetOF(0); // undefined actually, so currently clearing
+        }
+        
+        *reg8[r_m] = static_cast<uint8_t>(val);
+      } else if (width == 16) {
+        uint8_t last_bit_rotated = 0;
+        uint32_t val = SAR(*reg16[r_m], width, count, last_bit_rotated);
+
+        set_flags_logical(val, width);
+        SetCF(last_bit_rotated);
+        if (count == 1) {
+          SetOF(0);
+        } else {
+          SetOF(0); // undefined actually, so currently clearing
+        }
+        *reg16[r_m] = static_cast<uint16_t>(val);
+      }
+      break;
+    }
     case 0b111: {
-      mylog("Invalid value of reg in r/m byte in 0xD0 0xD1");
+      mylog("Invalid value of reg in r/m byte in 0xD0 0xD1 0xC0 0xC1");
       break;
     }
     default:
-      mylog("Unsupported 0xD0 0xD1");
+      mylog("Unsupported 0xD0 0xD1 0xC0 0xC1");
   }
 }

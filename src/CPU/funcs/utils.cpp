@@ -1,8 +1,7 @@
-#include "../CPU8068.h"
-
 #include <cstdint>
 
 #include "../../Utils/logger.h"
+#include "../CPU8068.h"
 
 uint16_t CPU8068::sign_extend(const uint8_t val) {
   return static_cast<uint16_t>(static_cast<int16_t>(static_cast<int8_t>(val)));
@@ -74,4 +73,180 @@ bool CPU8068::get_address_mode_rm(const uint8_t mode, const uint8_t r_m,
   }
 
   return true;
+}
+
+uint32_t CPU8068::ROL(uint32_t val, uint8_t width, uint8_t count,
+                      uint8_t& last_bit_rotated) {
+  if (width != 8 && width != 16) {
+    mylog("Incorrect width in ROL, returning original value");
+    return val;
+  }
+
+  if (count == 0) {
+    return val;
+  }
+
+  uint32_t result = val;
+  for (uint8_t i = 0; i < count; i++) {
+    uint8_t msb = (result >> (width - 1)) & 0x1;
+    result <<= 1;
+    result &= ((static_cast<uint32_t>(1) << static_cast<uint32_t>(width)) - static_cast<uint32_t>(1));
+    result |= msb;
+    last_bit_rotated = msb;
+  }
+
+  return result;
+}
+
+uint32_t CPU8068::ROR(uint32_t val, uint8_t width, uint8_t count,
+                      uint8_t& last_bit_rotated) {
+  if (width != 8 && width != 16) {
+    mylog("Incorrect width in ROR, returning original value");
+    return val;
+  }
+
+  if (count == 0) {
+    return val;
+  }
+
+  uint32_t result = val;
+  for (uint8_t i = 0; i < count; i++) {
+    uint8_t lsb = result & 0x1;
+    result >>= 1;
+    result |= (static_cast<uint32_t>(lsb) << (static_cast<uint32_t>(width) - static_cast<uint32_t>(1)));
+    last_bit_rotated = lsb;
+  }
+
+  return result;
+}
+
+uint32_t CPU8068::RCL(uint32_t val, uint8_t width, uint8_t count,
+                      uint8_t& last_bit_rotated) {
+  if (width != 8 && width != 16) {
+    mylog("Incorrect width in RCL, returning original value");
+    return val;
+  }
+
+  if (count == 0) {
+    return val;
+  }
+
+  val |= (CF() << width);
+  width += 1;
+
+  uint32_t result = val;
+  for (uint8_t i = 0; i < count; i++) {
+    uint8_t msb = (result >> (width - 1)) & 0x1;
+    result <<= 1;
+    result &= ((static_cast<uint32_t>(1) << static_cast<uint32_t>(width)) -
+               static_cast<uint32_t>(1));
+    result |= msb;
+    last_bit_rotated = msb;
+  }
+
+  width--;
+  SetCF(result >> width);
+  result &= ((static_cast<uint32_t>(1) << static_cast<uint32_t>(width)) -
+             static_cast<uint32_t>(1));
+
+  return result;
+}
+
+uint32_t CPU8068::RCR(uint32_t val, uint8_t width, uint8_t count,
+                      uint8_t& last_bit_rotated) {
+  if (width != 8 && width != 16) {
+    mylog("Incorrect width in RCR, returning original value");
+    return val;
+  }
+
+  if (count == 0) {
+    return val;
+  }
+
+  val |= (CF() << width);
+  width += 1;
+
+  uint32_t result = val;
+  for (uint8_t i = 0; i < count; i++) {
+    uint8_t lsb = result & 0x1;
+    result >>= 1;
+    result |= (static_cast<uint32_t>(lsb)
+               << (static_cast<uint32_t>(width) - static_cast<uint32_t>(1)));
+    last_bit_rotated = lsb;
+  }
+
+  width--;
+  SetCF(result >> width);
+  result &= ((static_cast<uint32_t>(1) << static_cast<uint32_t>(width)) -
+             static_cast<uint32_t>(1));
+
+  return result;
+}
+
+uint32_t CPU8068::SHL(uint32_t val, uint8_t width, uint8_t count,
+                      uint8_t& last_bit_rotated) {
+  if (width != 8 && width != 16) {
+    mylog("Incorrect width in SHL, returning original value");
+    return val;
+  }
+
+  if (count == 0) {
+    return val;
+  }
+
+  uint32_t result = val;
+  for (uint8_t i = 0; i < count; i++) {
+    uint8_t msb = (result >> (width - 1)) & 0x1;
+    result <<= 1;
+    result &= ((static_cast<uint32_t>(1) << static_cast<uint32_t>(width)) -
+               static_cast<uint32_t>(1));
+    last_bit_rotated = msb;
+  }
+
+  return result;
+}
+
+uint32_t CPU8068::SHR(uint32_t val, uint8_t width, uint8_t count,
+                      uint8_t& last_bit_rotated) {
+  if (width != 8 && width != 16) {
+    mylog("Incorrect width in SHR, returning original value");
+    return val;
+  }
+
+  if (count == 0) {
+    return val;
+  }
+
+  uint32_t result = val;
+  for (uint8_t i = 0; i < count; i++) {
+    uint8_t lsb = result & 0x1;
+    result >>= 1;
+    last_bit_rotated = lsb;
+  }
+
+  return result;
+}
+
+uint32_t CPU8068::SAR(uint32_t val, uint8_t width, uint8_t count,
+                      uint8_t& last_bit_rotated) {
+  if (width != 8 && width != 16) {
+    mylog("Incorrect width in SAR, returning original value");
+    return val;
+  }
+
+  if (count == 0) {
+    return val;
+  }
+
+  const uint8_t sign = (val >> (width - 1)) & 0x1;
+
+  uint32_t result = val;
+  for (uint8_t i = 0; i < count; i++) {
+    uint8_t lsb = result & 0x1;
+    result >>= 1;
+    result |= (static_cast<uint32_t>(sign) << static_cast<uint32_t>(width - 1));
+    last_bit_rotated = lsb;
+  }
+
+  return result;
 }

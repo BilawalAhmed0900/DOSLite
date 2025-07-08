@@ -590,12 +590,81 @@ void CPU8068::execute() {
         AX = temp;
         break;
       }
-               // SHIFTS
+        // SHIFTS
+        // D0 0   ROL r/m8    1
+        // D0 1   ROR r/m8    1
+        // D0 2   RCL r/m8    1
+        // D0 3   RCR r/m8    1
+        // D0 4   SHL r/m8    1
+        // D0 5   SHR r/m8    1
+        // D0 6   UNSUPPORTED
+        // D0 7   UNSUPPORTED
+        //
+        // D1 0   ROL r/m16   1
+        // D1 1   ROR r/m16   1
+        // D1 2   RCL r/m16   1
+        // D1 3   RCR r/m16   1
+        // D1 4   SHL r/m16   1
+        // D1 5   SHR r/m16   1
+        // D1 6   UNSUPPORTED
+        // D1 7   UNSUPPORTED
       case 0xD0:
       case 0xD1: {
         const uint8_t mod_rm = mem8(CS, IP++);
         const bool is_16bit = (opcode == 0xD1);
-        shift_reg_rm(mod_rm, (is_16bit) ? 16 : 8);
+        instr_d0_d1_d2_d3_c0_c1(mod_rm, (is_16bit) ? 16 : 8, 1);
+
+        break;
+      }
+        // D2 0   ROL r/m8    CL
+        // D2 1   ROR r/m8    CL
+        // D2 2   RCL r/m8    CL
+        // D2 3   RCR r/m8    CL
+        // D2 4   SHL r/m8    CL
+        // D2 5   SHR r/m8    CL
+        // D2 6   UNSUPPORTED
+        // D2 7   UNSUPPORTED
+        //
+        // D3 0   ROL r/m16   CL
+        // D3 1   ROR r/m16   CL
+        // D3 2   RCL r/m16   CL
+        // D3 3   RCR r/m16   CL
+        // D3 4   SHL r/m16   CL
+        // D3 5   SHR r/m16   CL
+        // D3 6   UNSUPPORTED
+        // D3 7   UNSUPPORTED
+      case 0xD2:
+      case 0xD3: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+        const bool is_16bit = (opcode == 0xD3);
+        instr_d0_d1_d2_d3_c0_c1(mod_rm, (is_16bit) ? 16 : 8, CL);
+
+        break;
+      }
+
+        // C0 0   ROL r/m8    imm8
+        // C0 1   ROR r/m8    imm8
+        // C0 2   RCL r/m8    imm8
+        // C0 3   RCR r/m8    imm8
+        // C0 4   SHL r/m8    imm8
+        // C0 5   SHR r/m8    imm8
+        // C0 6   UNSUPPORTED
+        // C0 7   UNSUPPORTED
+        //
+        // C1 0   ROL r/m16   imm8
+        // C1 1   ROR r/m16   imm8
+        // C1 2   RCL r/m16   imm8
+        // C1 3   RCR r/m16   imm8
+        // C1 4   SHL r/m16   imm8
+        // C1 5   SHR r/m16   imm8
+        // C1 6   UNSUPPORTED
+        // C1 7   UNSUPPORTED
+      case 0xC0:
+      case 0xC1: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+        const uint8_t times = mem8(CS, IP++);
+        const bool is_16bit = (opcode == 0xC1);
+        instr_d0_d1_d2_d3_c0_c1(mod_rm, (is_16bit) ? 16 : 8, times);
 
         break;
       }
