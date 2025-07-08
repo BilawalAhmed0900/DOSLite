@@ -593,7 +593,7 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t cou
   count &= 0b11111;
 
   if (count == 0) {
-    mylog("times == 0 in instr_d2_d3_c0_c1");
+    mylog("count == 0 in instr_d2_d3_c0_c1");
     return;
   }
 
