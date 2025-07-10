@@ -600,8 +600,8 @@ void CPU8068::execute() {
         // D0 3   RCR r/m8    1
         // D0 4   SHL r/m8    1
         // D0 5   SHR r/m8    1
-        // D0 6   UNSUPPORTED
-        // D0 7   UNSUPPORTED
+        // D0 6   SAL r/m8    1
+        // D0 7   SAR r/m8    1
         //
         // D1 0   ROL r/m16   1
         // D1 1   ROR r/m16   1
@@ -609,8 +609,8 @@ void CPU8068::execute() {
         // D1 3   RCR r/m16   1
         // D1 4   SHL r/m16   1
         // D1 5   SHR r/m16   1
-        // D1 6   UNSUPPORTED
-        // D1 7   UNSUPPORTED
+        // D1 6   SAL r/m16   1
+        // D1 7   SAR r/m16   1
       case 0xD0:
       case 0xD1: {
         const uint8_t mod_rm = mem8(CS, IP++);
@@ -625,8 +625,8 @@ void CPU8068::execute() {
         // D2 3   RCR r/m8    CL
         // D2 4   SHL r/m8    CL
         // D2 5   SHR r/m8    CL
-        // D2 6   UNSUPPORTED
-        // D2 7   UNSUPPORTED
+        // D2 6   SAL r/m8    CL
+        // D2 7   SAR r/m8    CL
         //
         // D3 0   ROL r/m16   CL
         // D3 1   ROR r/m16   CL
@@ -634,8 +634,8 @@ void CPU8068::execute() {
         // D3 3   RCR r/m16   CL
         // D3 4   SHL r/m16   CL
         // D3 5   SHR r/m16   CL
-        // D3 6   UNSUPPORTED
-        // D3 7   UNSUPPORTED
+        // D3 6   SAL r/m16   CL
+        // D3 7   SAR r/m16   CL
       case 0xD2:
       case 0xD3: {
         const uint8_t mod_rm = mem8(CS, IP++);
