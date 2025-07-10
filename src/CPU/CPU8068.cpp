@@ -17,16 +17,19 @@ CPU8068::CPU8068() : memory(MEMORY_SIZE, 0) {
   CS = DS = SS = ES = 0;
   IP = 0;
   FLAGS = 0;
+  interrupt_delay = 0;
 }
 
 void CPU8068::reset_registers() {
   AX = BX = CX = DX = 0;
   SP = BP = SI = DI = 0;
+  interrupt_delay = 0;
 }
 
 void CPU8068::execute() {
   while (true) {
     const uint8_t opcode = mem8(CS, IP++);
+    if (interrupt_delay) --interrupt_delay;
     switch (opcode) {
         // MOV
         // mov AL   moffs8   (0xA0)
@@ -666,6 +669,92 @@ void CPU8068::execute() {
         const bool is_16bit = (opcode == 0xC1);
         instr_d0_d1_d2_d3_c0_c1(mod_rm, (is_16bit) ? 16 : 8, times);
 
+        break;
+      }
+        // PUSH 50+r
+      case 0x50:
+      case 0x51:
+      case 0x52:
+      case 0x53:
+      case 0x55:
+      case 0x56:
+      case 0x57: {
+        SP -= 2;
+        mem16(SS, SP) = *reg16[opcode - 0x50];
+        break;
+      }
+        // Special SP case
+      case 0x54: {
+        const uint16_t origSP = SP;
+        SP -= 2;
+        mem16(SS, SP) = origSP;
+        break;
+        break;
+      }
+        // PUSH ES
+      case 0x06: {
+        SP -= 2;
+        mem16(SS, SP) = ES;
+        break;
+      }
+        // PUSH SS
+      case 0x16: {
+        SP -= 2;
+        mem16(SS, SP) = SS;
+        break;
+      }
+        // PUSH DS
+      case 0x1E: {
+        SP -= 2;
+        mem16(SS, SP) = DS;
+        break;
+      }
+        // PUSH imm16
+      case 0x68: {
+        const uint16_t val = mem16(CS, IP);
+        IP += 2;
+
+        SP -= 2;
+        mem16(SS, SP) = val;
+        break;
+      }
+        // PUSH imm8 (sign extend)
+      case 0x6A: {
+        const uint16_t val = sign_extend(mem8(CS, IP++));
+        SP -= 2;
+        mem16(SS, SP) = val;
+        break;
+      }
+        // POP 58+r
+      case 0x58:
+      case 0x59:
+      case 0x5A:
+      case 0x5B:
+      case 0x5C:
+      case 0x5D:
+      case 0x5E:
+      case 0x5F: {
+        *reg16[opcode - 0x58] = mem16(SS, SP);
+        SP += 2;
+        break;
+      }
+        // POP ES
+      case 0x07: {
+        ES = mem16(SS, SP);
+        SP += 2;
+        break;
+      }
+        // POP SS
+      case 0x17: {
+        interrupt_delay = 2;
+        SS = mem16(SS, SP);
+        SP += 2;
+        break;
+      }
+        // POP DS
+      case 0x1F: {
+        DS = mem16(SS, SP);
+        SP += 2;
         break;
       }
         // CLC

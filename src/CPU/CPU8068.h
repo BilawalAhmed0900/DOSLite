@@ -5,6 +5,7 @@
 #ifndef CPU8068_H
 #define CPU8068_H
 
+#include <atomic>
 #include <cstdint>
 #include <vector>
 
@@ -146,6 +147,15 @@ class CPU8068 {
   constexpr static size_t MEMORY_SIZE = 1 * 1024 * 1024;
   constexpr static size_t SEGMENT_SIZE = 64 * 1024;
   std::vector<uint8_t> memory;
+
+  /*
+    Dumb implementation for 'Interrupt boundary delay'
+
+    2 will be set when we pop SS
+    1 on the next instruction
+    0 after that
+  */
+  mutable uint8_t interrupt_delay;
 };
 #pragma pack(pop)
 
