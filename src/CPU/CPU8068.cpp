@@ -3,6 +3,7 @@
 //
 
 #include "CPU8068.h"
+#include "CPUMode.h"
 
 #include <cctype>
 #include <cstdint>
