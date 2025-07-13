@@ -16,14 +16,16 @@ void CPU8068::sub_rm_reg(const uint8_t mod_rm, const uint8_t width) {
     if (width == 8) {
       const uint8_t lhs = *reg8[r_m];
       const uint8_t rhs = *reg8[reg];
-      const uint16_t result = lhs - rhs;
+      const uint16_t result =
+          (static_cast<uint16_t>(lhs) - static_cast<uint16_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
 
       *reg8[r_m] = static_cast<uint8_t>(result);
     } else if (width == 16) {
       const uint16_t lhs = *reg16[r_m];
       const uint16_t rhs = *reg16[reg];
-      const uint32_t result = lhs - rhs;
+      const uint32_t result =
+          (static_cast<uint32_t>(lhs) - static_cast<uint32_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
 
       *reg16[r_m] = static_cast<uint16_t>(result);
@@ -39,14 +41,16 @@ void CPU8068::sub_rm_reg(const uint8_t mod_rm, const uint8_t width) {
     if (width == 8) {
       const uint8_t lhs = mem8(segment, address);
       const uint8_t rhs = *reg8[reg];
-      const uint16_t result = lhs - rhs;
+      const uint16_t result =
+          (static_cast<uint16_t>(lhs) - static_cast<uint16_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
 
       mem8(segment, address) = static_cast<uint8_t>(result);
     } else if (width == 16) {
       const uint16_t lhs = mem16(segment, address);
       const uint16_t rhs = *reg16[reg];
-      const uint32_t result = lhs - rhs;
+      const uint32_t result =
+          (static_cast<uint32_t>(lhs) - static_cast<uint32_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
 
       mem16(segment, address) = static_cast<uint16_t>(result);
@@ -69,14 +73,16 @@ void CPU8068::sub_reg_rm(const uint8_t mod_rm, const uint8_t width) {
     if (width == 8) {
       const uint8_t lhs = *reg8[reg];
       const uint8_t rhs = *reg8[r_m];
-      const uint16_t result = lhs - rhs;
+      const uint16_t result =
+          (static_cast<uint16_t>(lhs) - static_cast<uint16_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
 
       *reg8[reg] = static_cast<uint8_t>(result);
     } else if (width == 16) {
       const uint16_t lhs = *reg16[reg];
       const uint16_t rhs = *reg16[r_m];
-      const uint32_t result = lhs - rhs;
+      const uint32_t result =
+          (static_cast<uint32_t>(lhs) - static_cast<uint32_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
 
       *reg16[reg] = static_cast<uint16_t>(result);
@@ -92,14 +98,16 @@ void CPU8068::sub_reg_rm(const uint8_t mod_rm, const uint8_t width) {
     if (width == 8) {
       const uint8_t lhs = *reg8[reg];
       const uint8_t rhs = mem8(segment, address);
-      const uint16_t result = lhs - rhs;
+      const uint16_t result =
+          (static_cast<uint16_t>(lhs) - static_cast<uint16_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
 
       *reg8[reg] = static_cast<uint8_t>(result);
     } else if (width == 16) {
       const uint16_t lhs = *reg16[reg];
       const uint16_t rhs = mem16(segment, address);
-      const uint32_t result = lhs - rhs;
+      const uint32_t result =
+          (static_cast<uint32_t>(lhs) - static_cast<uint32_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
 
       *reg16[reg] = static_cast<uint16_t>(result);

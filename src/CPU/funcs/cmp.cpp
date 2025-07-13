@@ -17,12 +17,14 @@ void CPU8068::cmp_rm_reg(const uint8_t mod_rm, const uint8_t width) {
     if (width == 16) {
       const uint16_t lhs = *reg16[r_m];
       const uint16_t rhs = *reg16[reg];
-      const uint32_t result = lhs - rhs;
+      const uint32_t result =
+          (static_cast<uint32_t>(lhs) - static_cast<uint32_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
     } else {
       const uint8_t lhs = *reg8[r_m];
       const uint8_t rhs = *reg8[reg];
-      const uint16_t result = lhs - rhs;
+      const uint16_t result =
+          (static_cast<uint16_t>(lhs) - static_cast<uint16_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
     }
   } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
@@ -36,12 +38,14 @@ void CPU8068::cmp_rm_reg(const uint8_t mod_rm, const uint8_t width) {
     if (width == 8) {
       const uint8_t lhs = mem8(segment, address);
       const uint8_t rhs = *reg8[reg];
-      const uint16_t result = lhs - rhs;
+      const uint16_t result =
+          (static_cast<uint16_t>(lhs) - static_cast<uint16_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
     } else if (width == 16) {
       const uint16_t lhs = mem16(segment, address);
       const uint16_t rhs = *reg16[reg];
-      const uint32_t result = lhs - rhs;
+      const uint32_t result =
+          (static_cast<uint32_t>(lhs) - static_cast<uint32_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
     }
   } else {
@@ -62,12 +66,14 @@ void CPU8068::cmp_reg_rm(uint8_t mod_rm, uint8_t width) {
     if (width == 16) {
       const uint16_t lhs = *reg16[reg];
       const uint16_t rhs = *reg16[r_m];
-      const uint32_t result = lhs - rhs;
+      const uint32_t result =
+          (static_cast<uint32_t>(lhs) - static_cast<uint32_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
     } else {
       const uint8_t lhs = *reg8[reg];
       const uint8_t rhs = *reg8[r_m];
-      const uint16_t result = lhs - rhs;
+      const uint16_t result =
+          (static_cast<uint16_t>(lhs) - static_cast<uint16_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
     }
   } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
@@ -81,12 +87,14 @@ void CPU8068::cmp_reg_rm(uint8_t mod_rm, uint8_t width) {
     if (width == 8) {
       const uint8_t lhs = *reg8[reg];
       const uint8_t rhs = mem8(segment, address);
-      const uint16_t result = lhs - rhs;
+      const uint16_t result =
+          (static_cast<uint16_t>(lhs) - static_cast<uint16_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
     } else if (width == 16) {
       const uint16_t lhs = *reg16[reg];
       const uint16_t rhs = mem16(segment, address);
-      const uint32_t result = lhs - rhs;
+      const uint32_t result =
+          (static_cast<uint32_t>(lhs) - static_cast<uint32_t>(rhs));
       set_flags_sub(lhs, rhs, result, width);
     }
   } else {

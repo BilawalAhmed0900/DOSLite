@@ -3,7 +3,6 @@
 //
 
 #include "CPU8068.h"
-#include "CPUMode.h"
 
 #include <cctype>
 #include <cstdint>
@@ -11,6 +10,7 @@
 
 #include "../Exceptions/ProgramExitedException.h"
 #include "../Utils/logger.h"
+#include "CPUMode.h"
 
 CPU8068::CPU8068(const CPU_MODE cpu_mode)
     : memory(MEMORY_SIZE, 0), cpu_mode(cpu_mode) {
@@ -175,7 +175,8 @@ void CPU8068::execute() {
         // add AL imm8
       case 0x04: {
         const uint8_t rhs = mem8(CS, IP++);
-        const uint16_t result = AL + rhs;
+        const uint16_t result =
+            static_cast<uint16_t>(AL) + static_cast<uint16_t>(rhs);
         set_flags_add(AL, rhs, result, 8);
         AL = result & 0xFF;
         break;
@@ -185,7 +186,8 @@ void CPU8068::execute() {
         const uint16_t rhs = mem16(CS, IP);
         IP += 2;
 
-        const uint32_t result = AX + rhs;
+        const uint32_t result =
+            static_cast<uint32_t>(AX) + static_cast<uint32_t>(rhs);
         set_flags_add(AX, rhs, result, 16);
         AX = result & 0xFFFF;
         break;
@@ -214,7 +216,9 @@ void CPU8068::execute() {
         // adc AL imm8
       case 0x14: {
         const uint8_t rhs = mem8(CS, IP++);
-        const uint16_t result = AL + rhs + CF();
+        const uint16_t result = static_cast<uint16_t>(AL) +
+                                static_cast<uint16_t>(rhs) +
+                                static_cast<uint16_t>(CF());
         set_flags_add(AL, rhs, result, 8);
         AL = result & 0xFF;
         break;
@@ -224,7 +228,9 @@ void CPU8068::execute() {
         const uint16_t rhs = mem16(CS, IP);
         IP += 2;
 
-        const uint32_t result = AX + rhs + CF();
+        const uint32_t result = static_cast<uint32_t>(AX) +
+                                static_cast<uint32_t>(rhs) +
+                                static_cast<uint32_t>(CF());
         set_flags_add(AX, rhs, result, 16);
         AX = result & 0xFFFF;
         break;
@@ -253,7 +259,8 @@ void CPU8068::execute() {
         // sub AL imm8
       case 0x2C: {
         const uint8_t rhs = mem8(CS, IP++);
-        const uint16_t result = AL - rhs;
+        const uint16_t result =
+            static_cast<uint16_t>(AL) - static_cast<uint16_t>(rhs);
         set_flags_sub(AL, rhs, result, 8);
         AL = result & 0xFF;
         break;
@@ -263,7 +270,8 @@ void CPU8068::execute() {
         const uint16_t rhs = mem16(CS, IP);
         IP += 2;
 
-        const uint32_t result = AX - rhs;
+        const uint32_t result =
+            static_cast<uint32_t>(AX) - static_cast<uint32_t>(rhs);
         set_flags_sub(AX, rhs, result, 16);
         AX = result & 0xFFFF;
         break;
@@ -292,7 +300,9 @@ void CPU8068::execute() {
         // sbb AL imm8
       case 0x1C: {
         const uint8_t rhs = mem8(CS, IP++);
-        const uint16_t result = AL - rhs - CF();
+        const uint16_t result = static_cast<uint16_t>(AL) -
+                                static_cast<uint16_t>(rhs) -
+                                static_cast<uint16_t>(CF());
         set_flags_sub(AL, rhs, result, 8);
         AL = result & 0xFF;
         break;
@@ -302,7 +312,9 @@ void CPU8068::execute() {
         const uint16_t rhs = mem16(CS, IP);
         IP += 2;
 
-        const uint32_t result = AX - rhs - CF();
+        const uint32_t result = static_cast<uint32_t>(AX) -
+                                static_cast<uint32_t>(rhs) -
+                                static_cast<uint32_t>(CF());
         set_flags_sub(AX, rhs, result, 16);
         AX = result & 0xFFFF;
         break;
@@ -319,7 +331,8 @@ void CPU8068::execute() {
       case 0x47: {
         const uint8_t oldCF = CF();
 
-        const uint32_t result = *reg16[opcode - 0x40] + 1;
+        const uint32_t result = static_cast<uint32_t>(*reg16[opcode - 0x40]) +
+                                static_cast<uint32_t>(1);
         set_flags_add(*reg16[opcode - 0x40], 1, result, 16);
         *reg16[opcode - 0x40] = result;
 
@@ -338,7 +351,8 @@ void CPU8068::execute() {
       case 0x4F: {
         const uint8_t oldCF = CF();
 
-        const uint32_t result = *reg16[opcode - 0x48] - 1;
+        const uint32_t result = static_cast<uint32_t>(*reg16[opcode - 0x48]) -
+                                static_cast<uint32_t>(1);
         set_flags_sub(*reg16[opcode - 0x48], 1, result, 16);
         *reg16[opcode - 0x48] = result;
 
@@ -581,7 +595,8 @@ void CPU8068::execute() {
         // cmp AL imm8
       case 0x3C: {
         const uint8_t rhs = mem8(CS, IP++);
-        const uint16_t result = static_cast<uint16_t>(AL) - rhs;
+        const uint16_t result =
+            static_cast<uint16_t>(AL) - static_cast<uint16_t>(rhs);
         set_flags_sub(AL, rhs, result, 8);
         break;
       }
@@ -590,7 +605,8 @@ void CPU8068::execute() {
         const uint16_t rhs = mem16(CS, IP);
         IP += 2;
 
-        const uint32_t result = static_cast<uint32_t>(AX) - rhs;
+        const uint32_t result =
+            static_cast<uint32_t>(AX) - static_cast<uint32_t>(rhs);
         set_flags_sub(AX, rhs, result, 16);
         break;
       }
