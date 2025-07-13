@@ -11,7 +11,8 @@
 #include "../Exceptions/ProgramExitedException.h"
 #include "../Utils/logger.h"
 
-CPU8068::CPU8068() : memory(MEMORY_SIZE, 0) {
+CPU8068::CPU8068(const CPU_MODE cpu_mode)
+    : memory(MEMORY_SIZE, 0), cpu_mode(cpu_mode) {
   AX = BX = CX = DX = 0;
   SP = BP = SI = DI = 0;
   CS = DS = SS = ES = 0;
@@ -685,10 +686,15 @@ void CPU8068::execute() {
       }
         // Special SP case
       case 0x54: {
-        const uint16_t origSP = SP;
-        SP -= 2;
-        mem16(SS, SP) = origSP;
-        break;
+        if (cpu_mode == CPU_MODE::CPU_8086 || cpu_mode == CPU_MODE::CPU_80186) {
+          SP -= 2;
+          mem16(SS, SP) = SP;
+        } else {
+          const uint16_t origSP = SP;
+          SP -= 2;
+          mem16(SS, SP) = origSP;
+        }
+
         break;
       }
         // PUSH ES
@@ -742,20 +748,49 @@ void CPU8068::execute() {
       case 0x07: {
         ES = mem16(SS, SP);
         SP += 2;
+        update_segment_register(ES);
         break;
       }
         // POP SS
       case 0x17: {
-        interrupt_delay = 2;
         SS = mem16(SS, SP);
         SP += 2;
+        interrupt_delay = 2;
+        update_segment_register(SS);
         break;
       }
         // POP DS
       case 0x1F: {
         DS = mem16(SS, SP);
         SP += 2;
+        update_segment_register(DS);
         break;
+      }
+        // FE 0   INC r/m8
+        // FE 1   DEC r/m8
+      case 0xFE: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+        instr_fe(mod_rm);
+        break;
+      }
+        // FF 0   INC    r/m16
+        // FF 1   DEC    r/m16
+        // FF 2   CALL   r/m16
+        // FF 3   CALLF  r/m16
+        // FF 4   JUMP   r/m16
+        // FF 5   JUMPF  r/m16
+        // FF 6   PUSH   r/m16
+      case 0xFF: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+        instr_ff(mod_rm);
+        break;
+      }
+        // HLT
+      case 0xF4: {
+        /*
+          Will be revised later
+        */
+        throw ProgramExitedException{0};
       }
         // CLC
       case 0xF8: {
@@ -765,6 +800,17 @@ void CPU8068::execute() {
         // STC
       case 0xF9: {
         SetCF(1);
+        break;
+      }
+        // CLI
+      case 0xFA: {
+        SetIF(0);
+        break;
+      }
+        // STI
+      case 0xFB: {
+        SetIF(1);
+        interrupt_delay = 2;
         break;
       }
         // CLD

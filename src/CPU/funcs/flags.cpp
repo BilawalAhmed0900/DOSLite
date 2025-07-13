@@ -167,3 +167,8 @@ void CPU8068::SetOF(const uint8_t val) {
   FLAGS &= ~OF_MASK;
   FLAGS |= (val ? OF_MASK : 0);
 }
+
+void CPU8068::SetIF(const uint8_t val) {
+  FLAGS &= ~IF_MASK;
+  FLAGS |= (val ? IF_MASK : 0);
+}

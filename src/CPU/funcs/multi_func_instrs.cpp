@@ -814,3 +814,206 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width,
       mylog("Unsupported 0xD0 0xD1 0xC0 0xC1");
   }
 }
+
+void CPU8068::instr_fe(uint8_t mod_rm) {
+  const uint8_t mode = ((mod_rm >> 6) & 0b011);
+  const uint8_t reg = ((mod_rm >> 3) & 0b111);
+  const uint8_t r_m = ((mod_rm >> 0) & 0b111);
+
+  switch (reg) {
+    case 0b000: {
+      if (mode == 0b11) {
+        set_flags_logical(++(*reg8[r_m]), 8);
+      } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        if (!get_address_mode_rm(mode, r_m, address)) {
+          mylog("Unsupported r/m bit");
+          return;
+        }
+
+        set_flags_logical(++(mem8(DS, address)), 8);
+      } else {
+        mylog("Unsupported 0xFE");
+        return;
+      }
+      break;
+    }
+    case 0b001: {
+      if (mode == 0b11) {
+        set_flags_logical(--(*reg8[r_m]), 8);
+      } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        if (!get_address_mode_rm(mode, r_m, address)) {
+          mylog("Unsupported r/m bit");
+          return;
+        }
+
+        set_flags_logical(--(mem8(DS, address)), 8);
+      } else {
+        mylog("Unsupported 0xFE");
+        return;
+      }
+      break;
+    }
+    default:
+      mylog("Unsupported 0xFE");
+  }
+}
+
+void CPU8068::instr_ff(uint8_t mod_rm) {
+  const uint8_t mode = ((mod_rm >> 6) & 0b011);
+  const uint8_t reg = ((mod_rm >> 3) & 0b111);
+  const uint8_t r_m = ((mod_rm >> 0) & 0b111);
+
+  switch (reg) {
+    case 0b000: {
+      if (mode == 0b11) {
+        set_flags_logical(++(*reg16[r_m]), 16);
+      } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        if (!get_address_mode_rm(mode, r_m, address)) {
+          mylog("Unsupported r/m bit");
+          return;
+        }
+
+        set_flags_logical(++(mem16(DS, address)), 16);
+      } else {
+        mylog("Unsupported 0xFF");
+        return;
+      }
+      break;
+    }
+    case 0b001: {
+      if (mode == 0b11) {
+        set_flags_logical(--(*reg16[r_m]), 16);
+      } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        if (!get_address_mode_rm(mode, r_m, address)) {
+          mylog("Unsupported r/m bit");
+          return;
+        }
+
+        set_flags_logical(--(mem16(DS, address)), 16);
+      } else {
+        mylog("Unsupported 0xFF");
+        return;
+      }
+      break;
+    }
+    case 0b010: {
+      uint16_t newIP;
+      if (mode == 0b11) {
+        newIP = *reg16[r_m];
+      } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        if (!get_address_mode_rm(mode, r_m, address)) {
+          mylog("Unsupported r/m bit");
+          return;
+        }
+
+        newIP = mem16(DS, address);
+      } else {
+        mylog("Unsupported 0xFF");
+        return;
+      }
+
+      SP -= 2;
+      mem16(SS, SP) = IP;
+      IP = newIP;
+      break;
+    }
+    case 0b011: {
+      uint16_t newCS;
+      uint16_t newIP;
+      if (mode == 0b11) {
+        mylog("Invalid mode in far call in 0xFF");
+        return;
+      } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        if (!get_address_mode_rm(mode, r_m, address)) {
+          mylog("Unsupported r/m bit");
+          return;
+        }
+
+        newIP = mem16(DS, address);
+        newCS = mem16(DS, address + 2);
+      } else {
+        mylog("Unsupported 0xFF");
+        return;
+      }
+
+      SP -= 2;
+      mem16(SS, SP) = CS;
+      SP -= 2;
+      mem16(SS, SP) = IP;
+      IP = newIP;
+      CS = newCS;
+      break;
+    }
+    case 0b100: {
+      uint16_t newIP;
+      if (mode == 0b11) {
+        newIP = *reg16[r_m];
+      } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        if (!get_address_mode_rm(mode, r_m, address)) {
+          mylog("Unsupported r/m bit");
+          return;
+        }
+
+        newIP = mem16(DS, address);
+      } else {
+        mylog("Unsupported 0xFF");
+        return;
+      }
+
+      IP = newIP;
+      break;
+    }
+    case 0b101: {
+      uint16_t newCS;
+      uint16_t newIP;
+      if (mode == 0b11) {
+        mylog("Invalid mode in far call in 0xFF");
+        return;
+      } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        if (!get_address_mode_rm(mode, r_m, address)) {
+          mylog("Unsupported r/m bit");
+          return;
+        }
+
+        newIP = mem16(DS, address);
+        newCS = mem16(DS, address + 2);
+      } else {
+        mylog("Unsupported 0xFF");
+        return;
+      }
+
+      IP = newIP;
+      CS = newCS;
+      break;
+    }
+    case 0b110: {
+      if (mode == 0b11) {
+        SP -= 2;
+        mem16(SS, SP) = *reg16[r_m];
+      } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
+        uint16_t address;
+        if (!get_address_mode_rm(mode, r_m, address)) {
+          mylog("Unsupported r/m bit");
+          return;
+        }
+
+        SP -= 2;
+        mem16(SS, SP) = mem16(DS, address);
+      } else {
+        mylog("Unsupported 0xFF");
+        return;
+      }
+      break;
+    }
+    default:
+      mylog("Unsupported 0xFF");
+  }
+}

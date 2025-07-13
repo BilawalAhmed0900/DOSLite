@@ -2,6 +2,7 @@
 
 #include "../../Utils/logger.h"
 #include "../CPU8068.h"
+#include "../CPUMode.h"
 
 uint16_t CPU8068::sign_extend(const uint8_t val) {
   return static_cast<uint16_t>(static_cast<int16_t>(static_cast<int8_t>(val)));
@@ -249,4 +250,14 @@ uint32_t CPU8068::SAR(uint32_t val, uint8_t width, uint8_t count,
   }
 
   return result;
+}
+
+void CPU8068::update_segment_register(uint16_t reg) {
+  if (cpu_mode == CPU_MODE::CPU_8086 || cpu_mode == CPU_MODE::CPU_80186) {
+    mylog("CPU8068::update_segment_register called with reg: %ld",
+          static_cast<long int>(reg));
+  } else if (cpu_mode == CPU_MODE::CPU_80286) {
+    mylog("CPU8068::update_segment_register called with reg: %ld",
+          static_cast<long int>(reg));
+  }
 }

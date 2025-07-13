@@ -5,7 +5,8 @@
 #ifndef CPU8068_H
 #define CPU8068_H
 
-#include <atomic>
+#include "CPUMode.h"
+
 #include <cstdint>
 #include <vector>
 
@@ -14,7 +15,7 @@ class LoadToCPU;
 #pragma pack(push, 1)
 class CPU8068 {
  public:
-  CPU8068();
+  CPU8068(CPU_MODE cpu_mode);
   void reset_registers();
   void execute();
 
@@ -53,6 +54,7 @@ class CPU8068 {
   void sub_rm_reg(uint8_t mod_rm, uint8_t width);
   void add_reg_rm(uint8_t mod_rm, uint8_t width);
   void sub_reg_rm(uint8_t mod_rm, uint8_t width);
+  void pop_rm(uint8_t mod_rm);
 
   void test_rm_reg(uint8_t mod_rm, uint8_t width);
 
@@ -70,8 +72,12 @@ class CPU8068 {
   void instr_80_81_82(uint8_t mod_rm, uint8_t width);
   void instr_83(uint8_t mod_rm);
   void instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width, uint8_t count);
+  void instr_fe(uint8_t mod_rm);
+  void instr_ff(uint8_t mod_rm);
 
   bool get_address_mode_rm(uint8_t mode, uint8_t r_m, uint16_t& address);
+
+  void update_segment_register(uint16_t reg);
 
   void DAA();
   void DAS();
@@ -118,6 +124,7 @@ class CPU8068 {
   static constexpr uint16_t AF_MASK = 1 << 4;
   static constexpr uint16_t ZF_MASK = 1 << 6;
   static constexpr uint16_t SF_MASK = 1 << 7;
+  static constexpr uint16_t IF_MASK = 1 << 9;
   static constexpr uint16_t DF_MASK = 1 << 10;
   static constexpr uint16_t OF_MASK = 1 << 11;
   uint16_t FLAGS;
@@ -136,6 +143,7 @@ class CPU8068 {
   void SetDF(uint8_t val);
   [[nodiscard]] uint8_t OF() const;
   void SetOF(uint8_t val);
+  void SetIF(uint8_t val);
 
   /*
    *  All instruction are in sequence following this register sequence
@@ -147,6 +155,7 @@ class CPU8068 {
   constexpr static size_t MEMORY_SIZE = 1 * 1024 * 1024;
   constexpr static size_t SEGMENT_SIZE = 64 * 1024;
   std::vector<uint8_t> memory;
+  CPU_MODE cpu_mode;
 
   /*
     Dumb implementation for 'Interrupt boundary delay'

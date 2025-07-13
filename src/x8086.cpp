@@ -2,6 +2,7 @@
 #include <string_view>
 
 #include "CPU/CPU8068.h"
+#include "CPU/CPUMode.h"
 #include "Exceptions/ProgramExitedException.h"
 #include "ExecutableFiles/COM.h"
 #include "ExecutableFiles/MZExe.h"
@@ -18,7 +19,7 @@ int main(const int argc, const char* argv[]) {
   const std::string_view input_filename{argv[2]};
   const char mode = argv[1][0];
 
-  CPU8068 cpu;
+  CPU8068 cpu(CPU_MODE::CPU_8086);
   if (mode == 'c') {
     std::optional<COM> com{COM::open(input_filename)};
     if (!com) {

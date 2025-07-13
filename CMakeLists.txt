@@ -16,6 +16,7 @@ add_executable (x8086
         src/x8086.cpp
         src/CPU/CPU8068.cpp
         src/CPU/CPU8068.h
+        src/CPU/CPUMode.h
         src/CPU/funcs/mov.cpp
         src/CPU/funcs/cmp.cpp
         src/CPU/funcs/flags.cpp
@@ -26,6 +27,7 @@ add_executable (x8086
         src/CPU/funcs/sub.cpp
         src/CPU/funcs/test.cpp
         src/CPU/funcs/xchg.cpp
+        src/CPU/funcs/pop.cpp
         src/ExecutableFiles/MZExe.cpp
         src/ExecutableFiles/MZExe.h
         src/Utils/logger.h
