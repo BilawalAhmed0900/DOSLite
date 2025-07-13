@@ -190,6 +190,45 @@ void CPU8068::execute() {
         AX = result & 0xFFFF;
         break;
       }
+        // ADC
+        // ADC  r/m8  r8
+        // ADC  r/m16 r16
+      case 0x10:
+      case 0x11: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x11);
+        adc_rm_reg(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // ADC  r8  r/m8
+        // ADC  r16 r/m16
+      case 0x12:
+      case 0x13: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x13);
+        adc_reg_rm(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // adc AL imm8
+      case 0x14: {
+        const uint8_t rhs = mem8(CS, IP++);
+        const uint16_t result = AL + rhs + CF();
+        set_flags_add(AL, rhs, result, 8);
+        AL = result & 0xFF;
+        break;
+      }
+        // adc eAX imm16/32
+      case 0x15: {
+        const uint16_t rhs = mem16(CS, IP);
+        IP += 2;
+
+        const uint32_t result = AX + rhs + CF();
+        set_flags_add(AX, rhs, result, 16);
+        AX = result & 0xFFFF;
+        break;
+      }
         // SUB
         // SUB  r/m8  r8
         // SUB  r/m16 r16
@@ -225,6 +264,45 @@ void CPU8068::execute() {
         IP += 2;
 
         const uint32_t result = AX - rhs;
+        set_flags_sub(AX, rhs, result, 16);
+        AX = result & 0xFFFF;
+        break;
+      }
+        // SBB
+        // SBB  r/m8  r8
+        // SBB  r/m16 r16
+      case 0x18:
+      case 0x19: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x19);
+        sbb_rm_reg(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // SBB  r8  r/m8
+        // SBB  r16 r/m16
+      case 0x1A:
+      case 0x1B: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x1B);
+        sbb_reg_rm(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // sbb AL imm8
+      case 0x1C: {
+        const uint8_t rhs = mem8(CS, IP++);
+        const uint16_t result = AL - rhs - CF();
+        set_flags_sub(AL, rhs, result, 8);
+        AL = result & 0xFF;
+        break;
+      }
+        // sbb eAX imm16/32
+      case 0x1D: {
+        const uint16_t rhs = mem16(CS, IP);
+        IP += 2;
+
+        const uint32_t result = AX - rhs - CF();
         set_flags_sub(AX, rhs, result, 16);
         AX = result & 0xFFFF;
         break;

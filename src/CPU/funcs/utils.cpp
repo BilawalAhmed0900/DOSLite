@@ -28,7 +28,9 @@ uint16_t CPU8068::sign_extend(const uint8_t val) {
  *  111     [BX]        [BX+disp8]      [BX+disp16]     BH / DI
  */
 bool CPU8068::get_address_mode_rm(const uint8_t mode, const uint8_t r_m,
+                                  uint16_t& segment,
                                   uint16_t& address) {
+  segment = DS;
   switch (r_m) {
     case 0b000:
       address = BX + SI;
@@ -38,9 +40,11 @@ bool CPU8068::get_address_mode_rm(const uint8_t mode, const uint8_t r_m,
       break;
     case 0b010:
       address = BP + SI;
+      segment = SS;
       break;
     case 0b011:
       address = BP + DI;
+      segment = SS;
       break;
     case 0b100:
       address = SI;
@@ -51,6 +55,7 @@ bool CPU8068::get_address_mode_rm(const uint8_t mode, const uint8_t r_m,
     case 0b110: {
       if (mode == 0b01 || mode == 0b10) {
         address = BP;
+        segment = SS;
         break;
       }
       if (mode == 0b00) {

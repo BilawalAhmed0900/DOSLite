@@ -20,12 +20,13 @@ void CPU8068::pop_rm(uint8_t mod_rm) {
     *reg16[r_m] = val;
   } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
     uint16_t address;
-    if (!get_address_mode_rm(mode, r_m, address)) {
+    uint16_t segment;
+    if (!get_address_mode_rm(mode, r_m, segment, address)) {
       mylog("Unsupported r/m bit");
       return;
     }
 
-    mem16(DS, address) = val;
+    mem16(segment, address) = val;
   } else {
     mylog("Unsupported 0x8F");
   }

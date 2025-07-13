@@ -30,20 +30,21 @@ void CPU8068::test_rm_reg(const uint8_t mod_rm, const uint8_t width) {
     }
   } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
     uint16_t address;
-    if (!get_address_mode_rm(mode, r_m, address)) {
+    uint16_t segment;
+    if (!get_address_mode_rm(mode, r_m, segment, address)) {
       mylog("Unsupported r/m bit");
       return;
     }
 
     if (width == 8) {
-      const uint8_t lhs = mem8(DS, address);
+      const uint8_t lhs = mem8(segment, address);
       const uint8_t rhs = *reg8[reg];
       const uint16_t result = lhs & rhs;
       set_flags_logical(result, width);
       SetCF(0);
       SetOF(0);
     } else if (width == 16) {
-      const uint16_t lhs = mem16(DS, address);
+      const uint16_t lhs = mem16(segment, address);
       const uint16_t rhs = *reg16[reg];
       const uint32_t result = lhs & rhs;
       set_flags_logical(result, width);

@@ -5,10 +5,10 @@
 #ifndef CPU8068_H
 #define CPU8068_H
 
-#include "CPUMode.h"
-
 #include <cstdint>
 #include <vector>
+
+#include "CPUMode.h"
 
 class LoadToCPU;
 
@@ -51,9 +51,13 @@ class CPU8068 {
   void set_flags_logical(uint32_t result, uint8_t width);
 
   void add_rm_reg(uint8_t mod_rm, uint8_t width);
+  void adc_rm_reg(uint8_t mod_rm, uint8_t width);
   void sub_rm_reg(uint8_t mod_rm, uint8_t width);
+  void sbb_rm_reg(uint8_t mod_rm, uint8_t width);
   void add_reg_rm(uint8_t mod_rm, uint8_t width);
+  void adc_reg_rm(uint8_t mod_rm, uint8_t width);
   void sub_reg_rm(uint8_t mod_rm, uint8_t width);
+  void sbb_reg_rm(uint8_t mod_rm, uint8_t width);
   void pop_rm(uint8_t mod_rm);
 
   void test_rm_reg(uint8_t mod_rm, uint8_t width);
@@ -75,7 +79,8 @@ class CPU8068 {
   void instr_fe(uint8_t mod_rm);
   void instr_ff(uint8_t mod_rm);
 
-  bool get_address_mode_rm(uint8_t mode, uint8_t r_m, uint16_t& address);
+  bool get_address_mode_rm(uint8_t mode, uint8_t r_m, uint16_t& segment,
+                           uint16_t& address);
 
   void update_segment_register(uint16_t reg);
 

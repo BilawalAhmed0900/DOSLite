@@ -180,7 +180,8 @@ void CPU8068::instr_80_81_82(const uint8_t mod_rm, const uint8_t width) {
     }
   } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
     uint16_t address;
-    if (!get_address_mode_rm(mode, r_m, address)) {
+    uint16_t segment;
+    if (!get_address_mode_rm(mode, r_m, segment, address)) {
       mylog("Unsupported r/m bit");
       return;
     }
@@ -188,40 +189,40 @@ void CPU8068::instr_80_81_82(const uint8_t mod_rm, const uint8_t width) {
     switch (reg) {
       case 0b000: {
         if (width == 8) {
-          const uint8_t lhs = mem8(DS, address);
+          const uint8_t lhs = mem8(segment, address);
           const uint8_t rhs = mem8(CS, IP++);
           const uint16_t result = lhs + rhs;
           set_flags_add(lhs, rhs, result, width);
 
-          mem8(DS, address) = static_cast<uint8_t>(result);
+          mem8(segment, address) = static_cast<uint8_t>(result);
         } else {
-          const uint16_t lhs = mem16(DS, address);
+          const uint16_t lhs = mem16(segment, address);
           const uint16_t rhs = mem16(CS, IP);
           IP += 2;
 
           const uint32_t result = lhs + rhs;
           set_flags_add(lhs, rhs, result, width);
-          mem16(DS, address) = static_cast<uint16_t>(result);
+          mem16(segment, address) = static_cast<uint16_t>(result);
         }
 
         break;
       }
       case 0b001: {
         if (width == 8) {
-          const uint8_t lhs = mem8(DS, address);
+          const uint8_t lhs = mem8(segment, address);
           const uint8_t rhs = mem8(CS, IP++);
           const uint8_t result = lhs | rhs;
           set_flags_logical(result, width);
 
-          mem8(DS, address) = result;
+          mem8(segment, address) = result;
         } else {
-          const uint16_t lhs = mem16(DS, address);
+          const uint16_t lhs = mem16(segment, address);
           const uint16_t rhs = mem16(CS, IP);
           IP += 2;
 
           const uint16_t result = lhs | rhs;
           set_flags_logical(result, width);
-          mem16(DS, address) = result;
+          mem16(segment, address) = result;
         }
 
         break;
@@ -229,20 +230,20 @@ void CPU8068::instr_80_81_82(const uint8_t mod_rm, const uint8_t width) {
       case 0b010: {
         const uint8_t cf = CF();
         if (width == 8) {
-          const uint8_t lhs = mem8(DS, address);
+          const uint8_t lhs = mem8(segment, address);
           const uint8_t rhs = mem8(CS, IP++);
           const uint16_t result = lhs + rhs + cf;
           set_flags_add(lhs, rhs + cf, result, width);
 
-          mem8(DS, address) = static_cast<uint8_t>(result);
+          mem8(segment, address) = static_cast<uint8_t>(result);
         } else {
-          const uint16_t lhs = mem16(DS, address);
+          const uint16_t lhs = mem16(segment, address);
           const uint16_t rhs = mem16(CS, IP);
           IP += 2;
 
           const uint32_t result = lhs + rhs + cf;
           set_flags_add(lhs, rhs + cf, result, width);
-          mem16(DS, address) = static_cast<uint16_t>(result);
+          mem16(segment, address) = static_cast<uint16_t>(result);
         }
 
         break;
@@ -250,92 +251,92 @@ void CPU8068::instr_80_81_82(const uint8_t mod_rm, const uint8_t width) {
       case 0b011: {
         const uint8_t cf = CF();
         if (width == 8) {
-          const uint8_t lhs = mem8(DS, address);
+          const uint8_t lhs = mem8(segment, address);
           const uint8_t rhs = mem8(CS, IP++);
           const uint16_t result = lhs - rhs - cf;
           set_flags_sub(lhs, rhs + cf, result, width);
 
-          mem8(DS, address) = static_cast<uint8_t>(result);
+          mem8(segment, address) = static_cast<uint8_t>(result);
         } else {
-          const uint16_t lhs = mem16(DS, address);
+          const uint16_t lhs = mem16(segment, address);
           const uint16_t rhs = mem16(CS, IP);
           IP += 2;
 
           const uint32_t result = lhs - rhs - cf;
           set_flags_sub(lhs, rhs + cf, result, width);
-          mem16(DS, address) = static_cast<uint16_t>(result);
+          mem16(segment, address) = static_cast<uint16_t>(result);
         }
 
         break;
       }
       case 0b100: {
         if (width == 8) {
-          const uint8_t lhs = mem8(DS, address);
+          const uint8_t lhs = mem8(segment, address);
           const uint8_t rhs = mem8(CS, IP++);
           const uint8_t result = lhs & rhs;
           set_flags_logical(result, width);
 
-          mem8(DS, address) = result;
+          mem8(segment, address) = result;
         } else {
-          const uint16_t lhs = mem16(DS, address);
+          const uint16_t lhs = mem16(segment, address);
           const uint16_t rhs = mem16(CS, IP);
           IP += 2;
 
           const uint16_t result = lhs & rhs;
           set_flags_logical(result, width);
-          mem16(DS, address) = result;
+          mem16(segment, address) = result;
         }
 
         break;
       }
       case 0b101: {
         if (width == 8) {
-          const uint8_t lhs = mem8(DS, address);
+          const uint8_t lhs = mem8(segment, address);
           const uint8_t rhs = mem8(CS, IP++);
           const uint16_t result = lhs - rhs;
           set_flags_sub(lhs, rhs, result, width);
 
-          mem8(DS, address) = static_cast<uint8_t>(result);
+          mem8(segment, address) = static_cast<uint8_t>(result);
         } else {
-          const uint16_t lhs = mem16(DS, address);
+          const uint16_t lhs = mem16(segment, address);
           const uint16_t rhs = mem16(CS, IP);
           IP += 2;
 
           const uint32_t result = lhs - rhs;
           set_flags_sub(lhs, rhs, result, width);
-          mem16(DS, address) = static_cast<uint16_t>(result);
+          mem16(segment, address) = static_cast<uint16_t>(result);
         }
 
         break;
       }
       case 0b110: {
         if (width == 8) {
-          const uint8_t lhs = mem8(DS, address);
+          const uint8_t lhs = mem8(segment, address);
           const uint8_t rhs = mem8(CS, IP++);
           const uint8_t result = lhs ^ rhs;
           set_flags_logical(result, width);
 
-          mem8(DS, address) = result;
+          mem8(segment, address) = result;
         } else {
-          const uint16_t lhs = mem16(DS, address);
+          const uint16_t lhs = mem16(segment, address);
           const uint16_t rhs = mem16(CS, IP);
           IP += 2;
 
           const uint16_t result = lhs ^ rhs;
           set_flags_logical(result, width);
-          mem16(DS, address) = result;
+          mem16(segment, address) = result;
         }
 
         break;
       }
       case 0b111: {
         if (width == 8) {
-          const uint8_t lhs = mem8(DS, address);
+          const uint8_t lhs = mem8(segment, address);
           const uint8_t rhs = mem8(CS, IP++);
           const uint16_t result = lhs - rhs;
           set_flags_sub(lhs, rhs, result, width);
         } else {
-          const uint16_t lhs = mem16(DS, address);
+          const uint16_t lhs = mem16(segment, address);
           const uint16_t rhs = mem16(CS, IP);
           IP += 2;
 
@@ -444,86 +445,87 @@ void CPU8068::instr_83(const uint8_t mod_rm) {
     }
   } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
     uint16_t address;
-    if (!get_address_mode_rm(mode, r_m, address)) {
+    uint16_t segment;
+    if (!get_address_mode_rm(mode, r_m, segment, address)) {
       mylog("Unsupported r/m bit");
       return;
     }
 
     switch (reg) {
       case 0b000: {
-        const uint16_t lhs = mem16(DS, address);
+        const uint16_t lhs = mem16(segment, address);
         const uint16_t rhs = sign_extend(mem8(CS, IP++));
 
         const uint32_t result = lhs + rhs;
         set_flags_add(lhs, rhs, result, 16);
-        mem16(DS, address) = static_cast<uint16_t>(result);
+        mem16(segment, address) = static_cast<uint16_t>(result);
 
         break;
       }
       case 0b001: {
-        const uint16_t lhs = mem16(DS, address);
+        const uint16_t lhs = mem16(segment, address);
         const uint16_t rhs = sign_extend(mem8(CS, IP++));
 
         const uint16_t result = lhs | rhs;
         set_flags_logical(result, 16);
-        mem16(DS, address) = result;
+        mem16(segment, address) = result;
 
         break;
       }
       case 0b010: {
         const uint8_t cf = CF();
-        const uint16_t lhs = mem16(DS, address);
+        const uint16_t lhs = mem16(segment, address);
         const uint16_t rhs = sign_extend(mem8(CS, IP++));
 
         const uint32_t result = lhs + rhs + cf;
         set_flags_add(lhs, rhs + cf, result, 16);
-        mem16(DS, address) = static_cast<uint16_t>(result);
+        mem16(segment, address) = static_cast<uint16_t>(result);
 
         break;
       }
       case 0b011: {
         const uint8_t cf = CF();
-        const uint16_t lhs = mem16(DS, address);
+        const uint16_t lhs = mem16(segment, address);
         const uint16_t rhs = sign_extend(mem8(CS, IP++));
 
         const uint32_t result = lhs - rhs - cf;
         set_flags_sub(lhs, rhs + cf, result, 16);
-        mem16(DS, address) = static_cast<uint16_t>(result);
+        mem16(segment, address) = static_cast<uint16_t>(result);
 
         break;
       }
       case 0b100: {
-        const uint16_t lhs = mem16(DS, address);
+        const uint16_t lhs = mem16(segment, address);
         const uint16_t rhs = sign_extend(mem8(CS, IP++));
 
         const uint16_t result = lhs & rhs;
         set_flags_logical(result, 16);
-        mem16(DS, address) = result;
+        mem16(segment, address) = result;
 
         break;
       }
       case 0b101: {
-        const uint16_t lhs = mem16(DS, address);
+        const uint16_t lhs = mem16(segment, address);
         const uint16_t rhs = sign_extend(mem8(CS, IP++));
 
         const uint32_t result = lhs - rhs;
         set_flags_sub(lhs, rhs, result, 16);
-        mem16(DS, address) = static_cast<uint16_t>(result);
+        mem16(segment, address) = static_cast<uint16_t>(result);
 
         break;
       }
       case 0b110: {
-        const uint16_t lhs = mem16(DS, address);
+        const uint16_t lhs = mem16(segment, address);
         const uint16_t rhs = sign_extend(mem8(CS, IP++));
 
         const uint16_t result = lhs ^ rhs;
         set_flags_logical(result, 16);
-        mem16(DS, address) = result;
+        mem16(segment, address) = result;
 
         break;
       }
       case 0b111: {
-        const uint16_t lhs = mem16(DS, address);
+        const uint16_t lhs = mem16(segment, address);
         const uint16_t rhs = sign_extend(mem8(CS, IP++));
 
         const uint32_t result = lhs - rhs;
@@ -826,12 +828,13 @@ void CPU8068::instr_fe(uint8_t mod_rm) {
         set_flags_logical(++(*reg8[r_m]), 8);
       } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
         uint16_t address;
-        if (!get_address_mode_rm(mode, r_m, address)) {
+        uint16_t segment;
+        if (!get_address_mode_rm(mode, r_m, segment, address)) {
           mylog("Unsupported r/m bit");
           return;
         }
 
-        set_flags_logical(++(mem8(DS, address)), 8);
+        set_flags_logical(++(mem8(segment, address)), 8);
       } else {
         mylog("Unsupported 0xFE");
         return;
@@ -843,12 +846,13 @@ void CPU8068::instr_fe(uint8_t mod_rm) {
         set_flags_logical(--(*reg8[r_m]), 8);
       } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
         uint16_t address;
-        if (!get_address_mode_rm(mode, r_m, address)) {
+        uint16_t segment;
+        if (!get_address_mode_rm(mode, r_m, segment, address)) {
           mylog("Unsupported r/m bit");
           return;
         }
 
-        set_flags_logical(--(mem8(DS, address)), 8);
+        set_flags_logical(--(mem8(segment, address)), 8);
       } else {
         mylog("Unsupported 0xFE");
         return;
@@ -871,12 +875,13 @@ void CPU8068::instr_ff(uint8_t mod_rm) {
         set_flags_logical(++(*reg16[r_m]), 16);
       } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
         uint16_t address;
-        if (!get_address_mode_rm(mode, r_m, address)) {
+        uint16_t segment;
+        if (!get_address_mode_rm(mode, r_m, segment, address)) {
           mylog("Unsupported r/m bit");
           return;
         }
 
-        set_flags_logical(++(mem16(DS, address)), 16);
+        set_flags_logical(++(mem16(segment, address)), 16);
       } else {
         mylog("Unsupported 0xFF");
         return;
@@ -888,12 +893,13 @@ void CPU8068::instr_ff(uint8_t mod_rm) {
         set_flags_logical(--(*reg16[r_m]), 16);
       } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
         uint16_t address;
-        if (!get_address_mode_rm(mode, r_m, address)) {
+        uint16_t segment;
+        if (!get_address_mode_rm(mode, r_m, segment, address)) {
           mylog("Unsupported r/m bit");
           return;
         }
 
-        set_flags_logical(--(mem16(DS, address)), 16);
+        set_flags_logical(--(mem16(segment, address)), 16);
       } else {
         mylog("Unsupported 0xFF");
         return;
@@ -906,12 +912,13 @@ void CPU8068::instr_ff(uint8_t mod_rm) {
         newIP = *reg16[r_m];
       } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
         uint16_t address;
-        if (!get_address_mode_rm(mode, r_m, address)) {
+        uint16_t segment;
+        if (!get_address_mode_rm(mode, r_m, segment, address)) {
           mylog("Unsupported r/m bit");
           return;
         }
 
-        newIP = mem16(DS, address);
+        newIP = mem16(segment, address);
       } else {
         mylog("Unsupported 0xFF");
         return;
@@ -930,13 +937,14 @@ void CPU8068::instr_ff(uint8_t mod_rm) {
         return;
       } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
         uint16_t address;
-        if (!get_address_mode_rm(mode, r_m, address)) {
+        uint16_t segment;
+        if (!get_address_mode_rm(mode, r_m, segment, address)) {
           mylog("Unsupported r/m bit");
           return;
         }
 
-        newIP = mem16(DS, address);
-        newCS = mem16(DS, address + 2);
+        newIP = mem16(segment, address);
+        newCS = mem16(segment, address + 2);
       } else {
         mylog("Unsupported 0xFF");
         return;
@@ -956,12 +964,13 @@ void CPU8068::instr_ff(uint8_t mod_rm) {
         newIP = *reg16[r_m];
       } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
         uint16_t address;
-        if (!get_address_mode_rm(mode, r_m, address)) {
+        uint16_t segment;
+        if (!get_address_mode_rm(mode, r_m, segment, address)) {
           mylog("Unsupported r/m bit");
           return;
         }
 
-        newIP = mem16(DS, address);
+        newIP = mem16(segment, address);
       } else {
         mylog("Unsupported 0xFF");
         return;
@@ -978,13 +987,14 @@ void CPU8068::instr_ff(uint8_t mod_rm) {
         return;
       } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
         uint16_t address;
-        if (!get_address_mode_rm(mode, r_m, address)) {
+        uint16_t segment;
+        if (!get_address_mode_rm(mode, r_m, segment, address)) {
           mylog("Unsupported r/m bit");
           return;
         }
 
-        newIP = mem16(DS, address);
-        newCS = mem16(DS, address + 2);
+        newIP = mem16(segment, address);
+        newCS = mem16(segment, address + 2);
       } else {
         mylog("Unsupported 0xFF");
         return;
@@ -1000,13 +1010,14 @@ void CPU8068::instr_ff(uint8_t mod_rm) {
         mem16(SS, SP) = *reg16[r_m];
       } else if (mode == 0b00 || mode == 0b01 || mode == 0b10) {
         uint16_t address;
-        if (!get_address_mode_rm(mode, r_m, address)) {
+        uint16_t segment;
+        if (!get_address_mode_rm(mode, r_m, segment, address)) {
           mylog("Unsupported r/m bit");
           return;
         }
 
         SP -= 2;
-        mem16(SS, SP) = mem16(DS, address);
+        mem16(SS, SP) = mem16(segment, address);
       } else {
         mylog("Unsupported 0xFF");
         return;

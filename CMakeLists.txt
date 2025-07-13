@@ -28,6 +28,8 @@ add_executable (x8086
         src/CPU/funcs/test.cpp
         src/CPU/funcs/xchg.cpp
         src/CPU/funcs/pop.cpp
+        src/CPU/funcs/adc.cpp
+        src/CPU/funcs/sbb.cpp
         src/ExecutableFiles/MZExe.cpp
         src/ExecutableFiles/MZExe.h
         src/Utils/logger.h
