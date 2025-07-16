@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "../CPU/CPU8068.h"
+#include "../ExecutableFiles/COM.h"
 #include "logger.h"
 
 void LoadToCPU::load(CPU8068& cpu, const COM& com) {

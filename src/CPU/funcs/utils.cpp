@@ -76,6 +76,10 @@ bool CPU8068::get_address_mode_rm(const uint8_t mode, const uint8_t r_m,
   } else if (mode == 0b10) {
     address += static_cast<int16_t>(mem16(CS, IP));
     IP += 2;
+  } else if (mode == 0b00)
+    ; // No calculation for this
+  else {
+    return false; // Just a fail-safe
   }
 
   return true;
