@@ -813,7 +813,7 @@ void CPU8068::execute() {
       }
         // Special SP case
       case 0x54: {
-        if (cpu_mode == CPU_MODE::CPU_8086 || cpu_mode == CPU_MODE::CPU_80186) {
+        if (cpu_mode <= CPU_MODE::CPU_80186) {
           SP -= 2;
           mem16(SS, SP) = SP;
         } else {

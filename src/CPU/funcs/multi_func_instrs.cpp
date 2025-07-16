@@ -4,6 +4,7 @@
 
 #include "../../Utils/logger.h"
 #include "../CPU8068.h"
+#include "../CPUMode.h"
 
 void CPU8068::instr_80_81_82(const uint8_t mod_rm, const uint8_t width) {
   if (width != 8 && width != 16) {
@@ -590,10 +591,12 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width,
     The 8086 does not mask the rotation count. However, all other IA-32
     processors (starting with the Intel 286 processor) do mask the rotation
     count to 5 bits, resulting in a maximum count of 31. This masking is done in
-    all operating modes (intimesuding the virtual-8086 mode) to reduce the
+    all operating modes (including the virtual-8086 mode) to reduce the
     maximum execution time of the instructions.
   */
-  count &= 0b11111;
+  if (cpu_mode >= CPU_MODE::CPU_80286) {
+    count &= 0b11111;
+  }
 
   if (count == 0) {
     mylog("count == 0 in instr_d2_d3_c0_c1");
