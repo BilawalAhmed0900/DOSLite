@@ -113,6 +113,11 @@ void CPU8068::set_flags_logical(const uint32_t result, const uint8_t width) {
     return;
   }
 
+  /*
+    This will already set to 0 in adjust_flags,
+    but to be extra explicit clear
+  */
+  SetCF(0);
   SetAF(0);
   SetOF(0);
 

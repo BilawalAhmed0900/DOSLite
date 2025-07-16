@@ -360,6 +360,38 @@ void CPU8068::execute() {
         break;
       }
         // JMP
+        // JO e8
+      case 0x70: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (OF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JNO e8
+      case 0x71: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (!OF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JB e8
+      case 0x72: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (CF()) {
+          IP += offset;
+        }
+        break;
+      }
+        // JNB e8
+      case 0x73: {
+        const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
+        if (!CF()) {
+          IP += offset;
+        }
+        break;
+      }
         // JZ e8
       case 0x74: {
         const int8_t offset = static_cast<int8_t>(mem8(CS, IP++));
@@ -878,6 +910,129 @@ void CPU8068::execute() {
       case 0xFF: {
         const uint8_t mod_rm = mem8(CS, IP++);
         instr_ff(mod_rm);
+        break;
+      }
+        // OR
+        // OR  r/m8  r8
+        // OR  r/m16 r16
+      case 0x08:
+      case 0x09: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x09);
+        or_rm_reg(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // OR  r8  r/m8
+        // OR  r16 r/m16
+      case 0x0A:
+      case 0x0B: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x0B);
+        or_reg_rm(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // OR AL imm8
+      case 0x0C: {
+        const uint8_t rhs = mem8(CS, IP++);
+        const uint16_t result =
+            static_cast<uint16_t>(AL) | static_cast<uint16_t>(rhs);
+        set_flags_logical(result, 8);
+        AL = result & 0xFF;
+        break;
+      }
+        // OR eAX imm16/32
+      case 0x0D: {
+        const uint16_t rhs = mem16(CS, IP);
+        IP += 2;
+
+        const uint32_t result =
+            static_cast<uint32_t>(AX) | static_cast<uint32_t>(rhs);
+        set_flags_logical(result, 16);
+        AX = result & 0xFFFF;
+        break;
+      }
+        // AND
+        // AND  r/m8  r8
+        // AND  r/m16 r16
+      case 0x20:
+      case 0x21: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x21);
+        and_rm_reg(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // AND  r8  r/m8
+        // AND  r16 r/m16
+      case 0x22:
+      case 0x23: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x23);
+        and_reg_rm(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // AND AL imm8
+      case 0x24: {
+        const uint8_t rhs = mem8(CS, IP++);
+        const uint16_t result =
+            static_cast<uint16_t>(AL) & static_cast<uint16_t>(rhs);
+        set_flags_logical(result, 8);
+        AL = result & 0xFF;
+        break;
+      }
+        // AND eAX imm16/32
+      case 0x25: {
+        const uint16_t rhs = mem16(CS, IP);
+        IP += 2;
+
+        const uint32_t result =
+            static_cast<uint32_t>(AX) & static_cast<uint32_t>(rhs);
+        set_flags_logical(result, 16);
+        AX = result & 0xFFFF;
+        break;
+      }
+        // XOR
+        // XOR  r/m8  r8
+        // XOR  r/m16 r16
+      case 0x30:
+      case 0x31: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x31);
+        xor_rm_reg(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // XOR  r8  r/m8
+        // XOR  r16 r/m16
+      case 0x32:
+      case 0x33: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        const bool is_16bit = (opcode == 0x33);
+        xor_reg_rm(mod_rm, (is_16bit) ? 16 : 8);
+        break;
+      }
+        // XOR AL imm8
+      case 0x34: {
+        const uint8_t rhs = mem8(CS, IP++);
+        const uint16_t result =
+            static_cast<uint16_t>(AL) ^ static_cast<uint16_t>(rhs);
+        set_flags_logical(result, 8);
+        AL = result & 0xFF;
+        break;
+      }
+        // XOR eAX imm16/32
+      case 0x35: {
+        const uint16_t rhs = mem16(CS, IP);
+        IP += 2;
+
+        const uint32_t result =
+            static_cast<uint32_t>(AX) ^ static_cast<uint32_t>(rhs);
+        set_flags_logical(result, 16);
+        AX = result & 0xFFFF;
         break;
       }
         // HLT

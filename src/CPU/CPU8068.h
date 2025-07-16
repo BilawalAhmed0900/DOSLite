@@ -54,10 +54,18 @@ class CPU8068 {
   void adc_rm_reg(uint8_t mod_rm, uint8_t width);
   void sub_rm_reg(uint8_t mod_rm, uint8_t width);
   void sbb_rm_reg(uint8_t mod_rm, uint8_t width);
+  void or_rm_reg(uint8_t mod_rm, uint8_t width);
+  void and_rm_reg(uint8_t mod_rm, uint8_t width);
+  void xor_rm_reg(uint8_t mod_rm, uint8_t width);
+
   void add_reg_rm(uint8_t mod_rm, uint8_t width);
   void adc_reg_rm(uint8_t mod_rm, uint8_t width);
   void sub_reg_rm(uint8_t mod_rm, uint8_t width);
   void sbb_reg_rm(uint8_t mod_rm, uint8_t width);
+  void or_reg_rm(uint8_t mod_rm, uint8_t width);
+  void and_reg_rm(uint8_t mod_rm, uint8_t width);
+  void xor_reg_rm(uint8_t mod_rm, uint8_t width);
+
   void pop_rm(uint8_t mod_rm);
 
   void test_rm_reg(uint8_t mod_rm, uint8_t width);
