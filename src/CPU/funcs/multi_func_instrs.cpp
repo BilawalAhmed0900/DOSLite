@@ -677,14 +677,14 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width,
           Since CF is part of this operation,
           the last_bit_rotated is actually
           already in the CF, just setting again
-          for timesarity
+          for clarity
         */
         SetCF(last_bit_rotated);
 
         /*
           It is same as the ROR above
           but the most 2 significant bit
-          intimesudes the CF which is last_bit_rotated
+          includes the CF which is last_bit_rotated
           here
         */
         SetOF(last_bit_rotated ^ ((val >> (width - 1)) & 0x1));
@@ -696,14 +696,14 @@ void CPU8068::instr_d0_d1_d2_d3_c0_c1(uint8_t mod_rm, uint8_t width,
           Since CF is part of this operation,
           the last_bit_rotated is actually
           already in the CF, just setting again
-          for timesarity
+          for clarity
         */
         SetCF(last_bit_rotated);
 
         /*
           It is same as the ROR above
           but the most 2 significant bit
-          intimesudes the CF which is last_bit_rotated
+          includes the CF which is last_bit_rotated
           here
         */
         SetOF(last_bit_rotated ^ ((val >> (width - 1)) & 0x1));
