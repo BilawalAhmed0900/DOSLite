@@ -194,30 +194,3 @@ void CPU8068::mov_sreg_rm(uint8_t mod_rm, uint8_t width) {
     mylog("Unsupported 0x8E");
   }
 }
-
-void CPU8068::mov_es_di_ds_si(uint8_t width) {
-  if (width != 8 && width != 16) {
-    mylog("Unsupported width in mov_es_di_ds_si");
-    return;
-  }
-
-  if (width == 16) {
-    mem16(ES, DI) = mem16(DS, SI);
-    if (DF()) {
-      DI -= 2;
-      SI -= 2;
-    } else {
-      DI += 2;
-      SI += 2;
-    }
-  } else {
-    mem8(ES, DI) = mem8(DS, SI);
-    if (DF()) {
-      DI -= 1;
-      SI -= 1;
-    } else {
-      DI += 1;
-      SI += 1;
-    }
-  }
-}

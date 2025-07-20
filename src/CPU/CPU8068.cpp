@@ -73,6 +73,47 @@ void CPU8068::execute() {
         mov_es_di_ds_si(is_16bit ? 16 : 8);
         break;
       }
+        // CMPS   m8  m8         (0xA6)
+        // CMPSB  m8  m8         (0xA6)
+        // CMPS   m16 m16        (0xA7)
+        // CMPSW  m16 m16        (0xA7)
+      case 0xA6:
+      case 0xA7: {
+        const bool is_16bit = (opcode == 0xA7);
+        cmps_es_di_ds_si(is_16bit ? 16 : 8);
+        break;
+      }
+        // STOS   m8  m8         (0xAA)
+        // STOSB  m8  m8         (0xAA)
+        // STOS   m16 m16        (0xAB)
+        // STOSW  m16 m16        (0xAB)
+      case 0xAA:
+      case 0xAB: {
+        const bool is_16bit = (opcode == 0xAB);
+        stos_es_di(is_16bit ? 16 : 8);
+        break;
+      }
+
+        // LODS   m8  m8         (0xAC)
+        // LODSB  m8  m8         (0xAC)
+        // LODS   m16 m16        (0xAD)
+        // LODSW  m16 m16        (0xAD)
+      case 0xAC:
+      case 0xAD: {
+        const bool is_16bit = (opcode == 0xAD);
+        lods_ds_si(is_16bit ? 16 : 8);
+        break;
+      }
+        // SCAS   m8  m8         (0xAE)
+        // SCASB  m8  m8         (0xAE)
+        // SCAS   m16 m16        (0xAF)
+        // SCASW  m16 m16        (0xAF)
+      case 0xAE:
+      case 0xAF: {
+        const bool is_16bit = (opcode == 0xAF);
+        scas_es_di(is_16bit ? 16 : 8);
+        break;
+      }
         // B0 + r
         // mov r8, imm8
       case 0xB0:
@@ -1033,6 +1074,13 @@ void CPU8068::execute() {
             static_cast<uint32_t>(AX) ^ static_cast<uint32_t>(rhs);
         set_flags_logical(result, 16);
         AX = result & 0xFFFF;
+        break;
+      }
+        // LEA /r [address]
+      case 0x8D: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+
+        lea_reg_rm(mod_rm);
         break;
       }
         // HLT

@@ -66,6 +66,8 @@ class CPU8068 {
   void and_reg_rm(uint8_t mod_rm, uint8_t width);
   void xor_reg_rm(uint8_t mod_rm, uint8_t width);
 
+  void lea_reg_rm(uint8_t mod_rm);
+
   void pop_rm(uint8_t mod_rm);
 
   void test_rm_reg(uint8_t mod_rm, uint8_t width);
@@ -79,7 +81,13 @@ class CPU8068 {
   void cmp_reg_rm(uint8_t mod_rm, uint8_t width);
   void mov_rm_sreg(uint8_t mod_rm, uint8_t width);
   void mov_sreg_rm(uint8_t mod_rm, uint8_t width);
+
+  // string operations
   void mov_es_di_ds_si(uint8_t width);
+  void lods_ds_si(uint8_t width);
+  void stos_es_di(uint8_t width);
+  void cmps_es_di_ds_si(uint8_t width);
+  void scas_es_di(uint8_t width);
 
   void instr_80_81_82(uint8_t mod_rm, uint8_t width);
   void instr_83(uint8_t mod_rm);
