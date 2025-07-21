@@ -56,7 +56,8 @@ void CPU8068::execute() {
         const uint16_t address = mem16(CS, IP);
         IP += 2;
 
-        if (opcode == 0xA3) {
+        const bool is_16bit = (opcode == 0xA3);
+        if (is_16bit) {
           mem16(DS, address) = AX;
         } else {
           mem8(DS, address) = AL;
@@ -604,6 +605,23 @@ void CPU8068::execute() {
         break;
       }
         // RET
+        // retn imm16
+      case 0xC2: {
+        const uint16_t val = mem16(CS, IP);
+        IP += 2;
+
+        IP = mem16(SS, SP);
+        SP += 2;
+
+        SP += val;
+        break;
+      }
+        // retn
+      case 0xC3: {
+        IP = mem16(SS, SP);
+        SP += 2;
+        break;
+      }
         // retf imm16
       case 0xCA: {
         const uint16_t val = mem16(CS, IP);
@@ -644,6 +662,18 @@ void CPU8068::execute() {
         // AAS
       case 0x3F: {
         AAS();
+        break;
+      }
+        // AAM
+      case 0xD4: {
+        const uint8_t base = mem8(CS, IP++);
+        AAM(base);
+        break;
+      }
+        // AAD
+      case 0xD5: {
+        const uint8_t base = mem8(CS, IP++);
+        AAD(base);
         break;
       }
         // CMP
@@ -850,6 +880,34 @@ void CPU8068::execute() {
       case 0x57: {
         SP -= 2;
         mem16(SS, SP) = *reg16[opcode - 0x50];
+        break;
+      }
+        // PUSHF
+      case 0x9C: {
+        SP -= 2;
+        mem16(SS, SP) = FLAGS;
+        break;
+      }
+        // POPF
+      case 0x9D: {
+        FLAGS = mem16(SS, SP);
+        FLAGS |= 0b0000'0000'0000'0010;
+        SP += 2;
+        break;
+      }
+        // SAHF
+      case 0x9E: {
+        const uint8_t ah = AH & 0b1101'0111;
+        FLAGS &= 0b1111'1111'0000'0000;
+        FLAGS |= ah;
+        FLAGS |= 0b0000'0000'0000'0010;
+        break;
+      }
+        // LAHF
+      case 0x9F: {
+        const uint8_t flags =
+            static_cast<uint8_t>(FLAGS & 0b0000'0000'1101'0111);
+        AH = flags;
         break;
       }
         // Special SP case
@@ -1083,6 +1141,25 @@ void CPU8068::execute() {
         lea_reg_rm(mod_rm);
         break;
       }
+        // CBW
+      case 0x98: {
+        AX = sign_extend(AL);
+        break;
+      }
+        // CWD
+      case 0x99: {
+        if (AX & 0b1000'0000'0000'0000) {
+          DX = 0b1111'1111'1111'1111;
+        } else {
+          DX = 0b0000'0000'0000'0000;
+        }
+        break;
+      }
+        // FWAIT
+      case 0x9B: {
+        // We don't have a 0x8087 implementation
+        break;
+      }
         // HLT
       case 0xF4: {
         /*
@@ -1129,11 +1206,11 @@ void CPU8068::execute() {
 }
 
 uint8_t& CPU8068::mem8(const uint16_t CS, const uint16_t IP) {
-  return memory[(CS * SEGMENT_SIZE) + IP];
+  return memory[(CS * SEGMENT_MULTIPLIER) + IP];
 }
 
 uint16_t& CPU8068::mem16(const uint16_t CS, const uint16_t IP) {
-  return *reinterpret_cast<uint16_t*>(&memory[(CS * SEGMENT_SIZE) + IP]);
+  return *reinterpret_cast<uint16_t*>(&memory[(CS * SEGMENT_MULTIPLIER) + IP]);
 }
 
 void CPU8068::interrupt(const uint8_t num) {

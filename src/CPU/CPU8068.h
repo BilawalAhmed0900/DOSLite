@@ -104,6 +104,8 @@ class CPU8068 {
   void DAS();
   void AAA();
   void AAS();
+  void AAM(uint8_t base);
+  void AAD(uint8_t base);
 
   friend class LoadToCPU;
 
@@ -174,6 +176,7 @@ class CPU8068 {
   uint16_t* reg16[REGISTER_COUNT] = {&AX, &CX, &DX, &BX, &SP, &BP, &SI, &DI};
 
   constexpr static size_t MEMORY_SIZE = 1 * 1024 * 1024;
+  constexpr static size_t SEGMENT_MULTIPLIER = 16; // << 4
   constexpr static size_t SEGMENT_SIZE = 64 * 1024;
   std::vector<uint8_t> memory;
   CPU_MODE cpu_mode;

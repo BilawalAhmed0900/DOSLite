@@ -169,3 +169,52 @@ void CPU8068::AAS() {
 
   AL &= 0x0F;
 }
+
+/*
+IF 64-Bit Mode
+THEN
+  #UD;
+ELSE
+  tempAL := AL;
+  AH := tempAL / imm8; (* imm8 is set to 0AH for the AAM mnemonic *)
+  AL := tempAL MOD imm8;
+FI;
+*/
+void CPU8068::AAM(const uint8_t base) {
+  // Base 10 is mostly default
+  if (base != 0x0A) {
+    mylog("AAM called with non-default base, %d", (int)base);
+  }
+
+  const uint8_t al = AL;
+  AH = al / base;
+  AL = al % base;
+
+  set_flags_logical(AL, 8);
+}
+
+/*
+IF 64-Bit Mode
+THEN
+  #UD;
+ELSE
+  tempAL := AL;
+  tempAH := AH;
+  AL := (tempAL + (tempAH ∗ imm8)) AND FFH;
+  (* imm8 is set to 0AH for the AAD mnemonic.*)
+  AH := 0;
+FI;
+*/
+void CPU8068::AAD(const uint8_t base) {
+  // Base 10 is mostly default
+  if (base != 0x0A) {
+    mylog("AAD called with non-default base, %d", (int)base);
+  }
+
+  const uint8_t al = AL;
+  const uint8_t ah = AH;
+  AL = (al + (ah * base)) & 0xFF;
+  AH = 0;
+
+  set_flags_logical(AL, 8);
+}
