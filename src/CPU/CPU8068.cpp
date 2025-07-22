@@ -604,6 +604,17 @@ void CPU8068::execute() {
         CS = new_CS;
         break;
       }
+        // call e16
+      case 0xE8: {
+        const int16_t offset = static_cast<int16_t>(mem16(CS, IP));
+        IP += 2;
+
+        SP -= 2;
+        mem16(SS, SP) = IP;
+
+        IP += offset;
+        break;
+      }
         // RET
         // retn imm16
       case 0xC2: {
@@ -620,6 +631,17 @@ void CPU8068::execute() {
       case 0xC3: {
         IP = mem16(SS, SP);
         SP += 2;
+        break;
+      }
+        // LES /r
+        // LDS /r
+      case 0xC4:
+      case 0xC5: {
+        const uint8_t mod_rm = mem8(CS, IP++);
+        const bool is_lds = (opcode == 0xC5);
+
+        les_lds(mod_rm, is_lds);
+
         break;
       }
         // retf imm16
@@ -841,6 +863,12 @@ void CPU8068::execute() {
         const bool is_16bit = (opcode == 0xD3);
         instr_d0_d1_d2_d3_c0_c1(mod_rm, (is_16bit) ? 16 : 8, CL);
 
+        break;
+      }
+      // XLAT
+      case 0xD7: {
+        // zero_extend can be simple static_cast
+        AL = mem8(DS, BX + static_cast<uint16_t>(AL));
         break;
       }
 
@@ -1166,6 +1194,11 @@ void CPU8068::execute() {
           Will be revised later
         */
         throw ProgramExitedException{0};
+      }
+        // CMC
+      case 0xF5: {
+        SetCF(CF() ? 0 : 1);
+        break;
       }
         // CLC
       case 0xF8: {

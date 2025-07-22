@@ -35,6 +35,7 @@ add_executable (x8086
         src/CPU/funcs/xor.cpp
         src/CPU/funcs/lea.cpp
         src/CPU/funcs/string_operations.cpp
+        src/CPU/funcs/les_lds.cpp
         src/ExecutableFiles/MZExe.cpp
         src/ExecutableFiles/MZExe.h
         src/Utils/logger.h

@@ -95,6 +95,8 @@ class CPU8068 {
   void instr_fe(uint8_t mod_rm);
   void instr_ff(uint8_t mod_rm);
 
+  void les_lds(uint8_t mod_rm, bool is_lds);
+
   bool get_address_mode_rm(uint8_t mode, uint8_t r_m, uint16_t& segment,
                            uint16_t& address);
 
