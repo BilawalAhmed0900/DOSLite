@@ -5,7 +5,7 @@
 
 class MemoryDevice {
  public:
-  virtual ~MemoryDevice() {}
+  virtual ~MemoryDevice() = default;
 
   virtual bool owns(const size_t address) = 0;
 

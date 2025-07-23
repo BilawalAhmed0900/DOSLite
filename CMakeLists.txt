@@ -12,7 +12,7 @@ endif()
 project ("x8086")
 
 # Add source to this project's executable.
-add_executable (x8086 "src/x8086.cpp" "src/utils/Logger.h" "src/system/System.h" "src/system/MemoryBus.h" "src/system/ROM.h" "src/system/ROM.cpp")
+add_executable (x8086 "src/x8086.cpp" "src/utils/Logger.h" "src/system/System.h" "src/system/MemoryBus.h" "src/system/ROM.h" "src/system/ROM.cpp" "src/system/BIOSROM.cpp" "src/system/System.cpp")
 
 target_compile_definitions(x8086 PRIVATE $<$<CONFIG:Debug>:IS_DEBUG_BUILD>)
 

@@ -7,18 +7,20 @@
 
 #include "../utils/Logger.h"
 #include "MemoryBus.h"
+#include "MemoryDevice.h"
 
 ROM::ROM(const uint32_t starting_addr, const uint32_t ending_addr,
          const std::vector<uint8_t>& data)
-    : starting_addr(starting_addr), ending_addr(ending_addr) {
-  if (starting_addr > ending_addr) {
+    : MemoryDevice(), starting_addr(starting_addr), ending_addr(ending_addr) {
+  if (starting_addr >= ending_addr) {
     MYLOG("Invalid starting address: %d, and ending address: %d",
           (int)starting_addr, (int)ending_addr);
     throw std::runtime_error("Invalid starting and ending address in ROM::ROM");
   }
 
-  const uint32_t max_size =
-      static_cast<int32_t>(ending_addr) - static_cast<int32_t>(starting_addr);
+  const uint32_t max_size = static_cast<int32_t>(ending_addr) -
+                            static_cast<int32_t>(starting_addr) -
+                            1 /* since end exclusive */;
   if (data.size() > max_size) {
     MYLOG("Invalid ROM size. Max size allowed: %d", (int)max_size);
     throw std::runtime_error("Invalid size for data in ROM::ROM");

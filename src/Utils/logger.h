@@ -1,6 +1,5 @@
 #pragma once
 
-#define _CRT_SECURE_NO_WARNINGS
 #include <chrono>
 #include <cstdio>
 #include <ctime>
@@ -32,7 +31,12 @@ class Logger {
                               cpp_time.time_since_epoch()) %
                           1000)
                              .count());
+#if defined(_MSC_VER)
+    std::tm c_tm;
+    localtime_s(&c_tm, &c_time);
+#else
     const std::tm c_tm = *std::localtime(&c_time);
+#endif
 
     std::stringstream ss;
     ss << std::put_time(&c_tm, "%Y-%m-%dT%H:%M:%S");
@@ -68,9 +72,9 @@ class Logger {
 #endif
 
 #ifdef IS_DEBUG_BUILD
-#define MYLOG(some_bigger_format_variable, ...)               \
+#define MYLOG(some_bigger_format_variable, ...)       \
   Logger::getInstance().log(FUNC_SIGNATURE, __LINE__, \
-                                    some_bigger_format_variable, __VA_ARGS__)
+                            some_bigger_format_variable, __VA_ARGS__)
 #else
 #define MYLOG(some_bigger_format_variable, ...)
 #endif

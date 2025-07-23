@@ -3,13 +3,14 @@
 #include <cstdint>
 #include <vector>
 
+#include "MemoryBus.h"
 #include "MemoryDevice.h"
 
 class ROM : public MemoryDevice {
  public:
   ROM(const uint32_t starting_addr, const uint32_t ending_addr,
       const std::vector<uint8_t>& data);
-  ~ROM() = default;
+  virtual ~ROM() = default;
 
   bool owns(const size_t address) override;
 
