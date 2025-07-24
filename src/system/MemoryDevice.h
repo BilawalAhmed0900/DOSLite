@@ -1,7 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include "MemoryBus.h"
+
+#include "Callbacks.h"
 
 class MemoryDevice {
  public:

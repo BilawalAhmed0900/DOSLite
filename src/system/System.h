@@ -1,15 +1,13 @@
 #pragma once
 
-#include <memory>
-#include <vector>
 #include <string>
 
-#include "MemoryDevice.h"
+#include "MemoryBus.h"
 
 class System {
  public:
-  void LoadBios(const std::string& path);
+  void Initialize(const std::string& bios_path);
 
  private:
-  std::vector<std::unique_ptr<MemoryDevice>> memory_devices;
+  MemoryBus memory_bus;
 };

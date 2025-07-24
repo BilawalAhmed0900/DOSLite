@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "../utils/Logger.h"
-#include "MemoryBus.h"
 #include "MemoryDevice.h"
+#include "Callbacks.h"
 
 ROM::ROM(const uint32_t starting_addr, const uint32_t ending_addr,
          const std::vector<uint8_t>& data)

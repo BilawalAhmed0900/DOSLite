@@ -1,8 +1,14 @@
 #pragma once
 
-#include <cstdint>
-#include <functional>
+#include <memory>
+#include <vector>
 
-using Read08Callback = std::function<void(const uint8_t val)>;
-using Read16Callback = std::function<void(const uint16_t val)>;
-using Read32Callback = std::function<void(const uint32_t val)>;
+#include "MemoryDevice.h"
+
+class MemoryBus {
+ public:
+  void AddMemoryDevice(std::unique_ptr<MemoryDevice>&& device);
+
+ private:
+  std::vector<std::unique_ptr<MemoryDevice>> memory_devices;
+};
