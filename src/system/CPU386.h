@@ -151,7 +151,7 @@ class CPU386 {
       uint32_t CR0_MP : 1;  // Monitor Coprocessor
       uint32_t CR0_EM : 1;  // Emulation
       uint32_t CR0_TS : 1;  // Task Switched
-      uint32_t CR0_ET : 1;  // Extension Type (387)
+      uint32_t CR0_ET : 1;  // Extension Type: always 1 on 80386 (387 FPU present)
       uint32_t CR0_NE : 1;  // Numeric Error
       uint32_t CR0_R1 : 10;
       uint32_t CR0_WP : 1;  // Write Protect

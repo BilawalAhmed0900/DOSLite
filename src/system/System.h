@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "CPU386.h"
 #include "MemoryBus.h"
 
 class System {
@@ -9,5 +10,6 @@ class System {
   void Initialize(const std::string& bios_path);
 
  private:
+  CPU386 cpu;
   MemoryBus memory_bus;
 };

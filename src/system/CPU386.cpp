@@ -9,6 +9,7 @@ void CPU386::Reset() {
   FLAGS_R1 = 1;
 
   CR0 = CR2 = CR3 = 0;
+  CR0_ET = 1;
   CR0_NW = 1;
   CR0_CD = 1;
   CS = SS = DS = ES = FS = GS = 0;
