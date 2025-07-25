@@ -1,5 +1,7 @@
 #include "CPU386.h"
 
+#include "../utils/Logger.h"
+
 CPU386::CPU386() { Reset(); }
 
 void CPU386::Reset() {
@@ -29,4 +31,14 @@ void CPU386::Reset() {
   */
   CS = 0xF000;
   IP = 0xFFF0;
+  MYLOG("Initial CPU state:");
+  MYLOG("EAX : 0x%08X    EBX : 0x%08X    ECX: 0x%08X    EDX : 0x%08X", (int)EAX,
+        (int)EBX, (int)ECX, (int)EDX);
+  MYLOG("ESP : 0x%08X    EBP : 0x%08X    ESI: 0x%08X    EDI : 0x%08X", (int)ESP,
+        (int)EBP, (int)ESI, (int)EDI);
+  MYLOG("EFLAGS : 0x%08X", (int)EFLAGS);
+  MYLOG("CR0 : 0x%08X    CR2 : 0x%08X    CR3 : 0x%08X", (int)CR0, (int)CR2,
+        (int)CR3);
+  MYLOG("CS : 0x%08X    IP : 0x%08X    SS : 0x%08X    DS: 0x%08X    ES : 0x%08X    FS :  0x%08X    GS : 0x%08X",
+      (int)CS, (int)IP, (int)SS, (int)DS, (int)ES, (int)FS, (int)GS);
 }
