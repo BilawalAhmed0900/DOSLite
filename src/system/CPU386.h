@@ -111,20 +111,20 @@ class CPU386 {
       union {
         uint16_t FLAGS;
         struct {
-          uint16_t CF : 1;
+          uint16_t FLAGS_CF : 1;
           uint16_t FLAGS_R1 : 1;  // reserved, always 1
-          uint16_t PF : 1;
+          uint16_t FLAGS_PF : 1;
           uint16_t FLAGS_R2 : 1;  // reserved, always 0
-          uint16_t AF : 1;
+          uint16_t FLAGS_AF : 1;
           uint16_t FLAGS_R3 : 1;  // reserved, always 0
-          uint16_t ZF : 1;
-          uint16_t SF : 1;
-          uint16_t TF : 1;
-          uint16_t IF : 1;
-          uint16_t DF : 1;
-          uint16_t OF : 1;
-          uint16_t IOPL : 2;
-          uint16_t NT : 1;
+          uint16_t FLAGS_ZF : 1;
+          uint16_t FLAGS_SF : 1;
+          uint16_t FLAGS_TF : 1;
+          uint16_t FLAGS_IF : 1;
+          uint16_t FLAGS_DF : 1;
+          uint16_t FLAGS_OF : 1;
+          uint16_t FLAGS_IOPL : 2;
+          uint16_t FLAGS_NT : 1;
           uint16_t FLAGS_R4 : 1;  // reserved, always 0
         };
       };
@@ -132,13 +132,13 @@ class CPU386 {
       union {
         uint16_t ____FLAGS_UNUSED;
         struct {
-          uint16_t RF : 1;
-          uint16_t VM : 1;
-          uint16_t AC : 1;
-          uint16_t VIF : 1;
-          uint16_t VIP : 1;
-          uint16_t ID : 1;
-          uint16_t FLAGS_R5 : 10;  // reserved, always 0
+          uint16_t EFLAGS_RF : 1;
+          uint16_t EFLAGS_VM : 1;
+          uint16_t EFLAGS_AC : 1;
+          uint16_t EFLAGS_VIF : 1;
+          uint16_t EFLAGS_VIP : 1;
+          uint16_t EFLAGS_ID : 1;
+          uint16_t EFLAGS_R5 : 10;  // reserved, always 0
         };
       };
     };
@@ -147,22 +147,25 @@ class CPU386 {
   union {
     uint32_t CR0;
     struct {
-      uint32_t PE : 1;
-      uint32_t MP : 1;
-      uint32_t EM : 1;
-      uint32_t TS : 1;
-      uint32_t ET : 1;
-      uint32_t NE : 1;
+      uint32_t CR0_PE : 1;  // Protection Enable
+      uint32_t CR0_MP : 1;  // Monitor Coprocessor
+      uint32_t CR0_EM : 1;  // Emulation
+      uint32_t CR0_TS : 1;  // Task Switched
+      uint32_t CR0_ET : 1;  // Extension Type (387)
+      uint32_t CR0_NE : 1;  // Numeric Error
       uint32_t CR0_R1 : 10;
-      uint32_t WP : 1;
+      uint32_t CR0_WP : 1;  // Write Protect
       uint32_t CR0_R2 : 1;
-      uint32_t AM : 1;
+      uint32_t CR0_AM : 1;  // Alignment Mask
       uint32_t CR0_R3 : 10;
-      uint32_t NW : 1;
-      uint32_t CD : 1;
-      uint32_t PG : 1;
+      uint32_t CR0_NW : 1;  // Not Write-through
+      uint32_t CR0_CD : 1;  // Cache Disable
+      uint32_t CR0_PG : 1;  // Paging
     };
   };
+
+  uint32_t CR2;
+  uint32_t CR3;
 
   struct {
     uint32_t base;
